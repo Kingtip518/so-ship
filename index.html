@@ -252,7 +252,7 @@ h3.mini{margin:0;font-size:15px}
     <span style="display:flex;gap:6px"><button id="installBtn">Cài ngay</button><button id="installClose" style="background:none;color:var(--ink);border:1px solid var(--line)">Để sau</button></span>
   </div>
   <div class="banner" id="sampleBanner" hidden>
-    <span>Đang xem <b>dữ liệu mẫu</b> để thử. Xóa đi khi bắt đầu ghi đơn thật.</span>
+    <span>Đang xem <b>dữ liệu mẫu</b> (Shop Hoa Mai, Tiệm Bánh Nhà Bơ… là shop giả). Đơn thật đầu tiên bạn lưu sẽ tự xóa hết dữ liệu mẫu.</span>
     <button id="clearSample">Xóa dữ liệu mẫu</button>
   </div>
 
@@ -502,7 +502,7 @@ function sample(){
 }
 function load(){
   try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s);if(o&&Array.isArray(o.orders)){o.shopPhones=o.shopPhones||{};o.shopDefs=o.shopDefs||{};o.shops=o.shops||[];o.settled=o.settled||{};return o}}}catch(e){}
-  return sample();
+  return{orders:[],shops:[],settled:{},shopPhones:{},shopDefs:{},name:'',sample:false};
 }
 const IC={
   call:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',
@@ -557,7 +557,14 @@ function render(){
 
 function renderOrders(os){
   const L=$('#orderList');
-  if(!os.length){L.innerHTML='<div class="empty">Chưa có đơn nào trong ngày này.<br>Bấm <b>+ Thêm đơn</b> ở góc dưới để ghi đơn đầu tiên.</div>';return}
+  if(!os.length){
+    if(!state.orders.length){L.innerHTML=`<div class="empty" style="text-align:left;display:flex;flex-direction:column;gap:10px">
+      <b style="color:var(--ink);font-size:16px">Sổ đang trống, bắt đầu ghi đơn nhé</b>
+      <span>1. Bấm <b>+ Thêm đơn</b>, chọn shop, gõ số tiền, bấm Lưu.</span>
+      <span>2. Hoặc chép tin đơn trong nhóm Zalo, chọn <b>Dán tin Zalo</b>, sổ tự tách đơn.</span>
+      <span>3. Cuối ngày vào <b>Đối soát</b>, bấm sao chép rồi gửi Zalo cho shop.</span>
+      <button type="button" class="btn sec" id="loadSample">Xem thử với dữ liệu mẫu</button></div>`;return}
+    L.innerHTML='<div class="empty">Chưa có đơn nào trong ngày này.<br>Bấm <b>+ Thêm đơn</b> ở góc dưới để ghi đơn đầu tiên.</div>';return}
   const pend=os.filter(o=>o.status==='dang');
   const bulk=pend.length>=2?`<div class="bulkbar"><span>Còn <b>${pend.length}</b> đơn đang giao</span><button type="button" id="bulkGiao">✓ Giao xong hết ${pend.length} đơn</button></div>`:'';
   L.innerHTML=bulk+os.map(o=>{
@@ -807,7 +814,7 @@ function openForm(o){
     form.phiBy=o.phiBy;form.status=o.status;setSeg('segPhi',o.phiBy);setSeg('segSt',o.status);
     if(o.ung||o.note||o.status!=='dang')$('#more').open=true;
     document.querySelectorAll('#shopChips button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.s===o.shop)));
-  } else setShop(recentShops()[0]||'');
+  } else setShop(state.sample?'':(recentShops()[0]||''));
   $('#sheetBg').hidden=false;updatePreview();
   setMode(o?'nhanh':mode);
 }
@@ -982,6 +989,7 @@ function rememberShop(f){
 function newId(){return'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function saveQuick(andNext){
   const f=readForm();
+  if(!$('#fShop').value.trim()){toast('Chọn shop trước (hoặc chọn “Khách gửi lẻ”).');try{$('#fShop').focus()}catch(e){}return}
   if(!f.hang&&!f.phi){toast('Nhập tiền thu hộ hoặc phí ship.');try{$('#fHang').focus()}catch(e){}return}
   if(state.sample)clearSampleData(true);
   const wasEdit=!!editId;
@@ -1053,6 +1061,7 @@ $('#fPhone').addEventListener('input',()=>{if($('#fAddr').value.trim())return;co
 $('#form').addEventListener('submit',e=>{e.preventDefault();saveQuick(false)});
 $('#fHang').addEventListener('keydown',e=>{if(e.key==='Enter'&&!editId){e.preventDefault();saveQuick(true)}});
 
+document.addEventListener('click',e=>{if(!e.target.closest('#loadSample'))return;state=sample();save();render();toast('Đang xem dữ liệu mẫu. Bấm “Xóa dữ liệu mẫu” khi muốn ghi đơn thật.')});
 let lastBulk=null;
 $('#orderList').addEventListener('click',e=>{
   const bg=e.target.closest('#bulkGiao');
