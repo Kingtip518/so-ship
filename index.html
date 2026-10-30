@@ -176,6 +176,8 @@ fieldset.grp legend{font-weight:700;font-size:13px;padding:0 4px}
 .opt{font-weight:400;color:var(--muted);font-size:11px}
 details.more{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 details.more summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.pastebox{min-height:110px;font-size:16px;border:2px dashed var(--accent);background:var(--accent-soft)}
+.pastebox:focus{border-style:solid}
 .pcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
 .pcard input[type=checkbox]{width:20px;height:20px;margin-top:2px;accent-color:var(--ink);flex-shrink:0}
 .pcard .pc-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:14px}
@@ -367,8 +369,7 @@ h3.mini{margin:0;font-size:15px}
 
     <!-- Chế độ dán tin: 1 hoặc nhiều đơn -->
     <div id="pasteMode" hidden class="wrap" style="gap:10px">
-      <button type="button" class="btn pri" id="pasteClip" style="padding:13px;font-size:16px">Dán tin vừa chép</button>
-      <textarea class="inp" id="pasteText" style="min-height:120px" placeholder="Hoặc giữ tay vào đây để dán tin đơn, 1 đơn hay nhiều đơn đều được, 1 đơn hay nhiều đơn đều được.&#10;&#10;Ví dụ:&#10;Shop Hoa Mai gửi:&#10;1. 22 Hạ Long, 0912345678, thu 350k&#10;2. Giếng Đáy, 0988111222, thu 520k"></textarea>
+      <textarea class="inp pastebox" id="pasteText" placeholder="Giữ tay vào đây, chọn Dán.&#10;1 đơn hay nhiều đơn đều được, 1 đơn hay nhiều đơn đều được.&#10;&#10;Ví dụ:&#10;Shop Hoa Mai gửi:&#10;1. 22 Hạ Long, 0912345678, thu 350k&#10;2. Giếng Đáy, 0988111222, thu 520k"></textarea>
       <span class="hint" style="font-size:12px;color:var(--muted)">Có thể bấm nút micro trên bàn phím điện thoại để đọc đơn thay vì gõ.</span>
       <div class="field" id="pasteShopBox" hidden>
         <label for="pasteShopInp">Nơi gửi cho đơn tin không ghi <span class="opt">không bắt buộc</span></label>
@@ -1019,7 +1020,6 @@ function savePaste(){
   pick.forEach((o,i)=>{const f={shop:o.shop||'',sdtGui:normPhone(o.senderPhone||''),addr:o.addr||'',phone:o.phone,hang:o.hang,phi:o.phi,ung:0,phiBy:o.phiBy||'khach',status:'dang',bomFee:true,ten:o.ten||'',note:o.mon||''};
     state.orders.push(Object.assign({id:newId()+i,date:day,t:t-i},f));rememberShop(f);
     if(f.sdtGui&&f.shop&&!state.shopPhones[f.shop])state.shopPhones[f.shop]=f.sdtGui});
-  lastClip=$('#pasteText').value.trim();try{localStorage.setItem('soShip.lastClip',lastClip)}catch(e){}
   save();closeForm();render();toast(`Đã thêm ${pick.length} đơn.`);
 }
 
@@ -1039,16 +1039,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('#undoBulk')||!lastBu
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{view=b.dataset.v;render();window.scrollTo(0,0)});
 $('#prevDay').onclick=()=>{day=addDays(day,-1);render()};
 $('#nextDay').onclick=()=>{if(day<today()){day=addDays(day,1);render()}};
-/* Bấm "+ Thêm đơn" là đọc luôn tin vừa chép, giống tin đơn thì tự dán */
-let lastClip='';try{lastClip=localStorage.getItem('soShip.lastClip')||''}catch(e){}
-const looksLikeOrder=t=>!!t&&t.length<4000&&(PHONE_RE.test(t)||/\d+\s*(k|tr|nghìn|ngàn)(?![a-zà-ỹ])/i.test(t));
-async function tryAutoPaste(){
-  if(!navigator.clipboard||!navigator.clipboard.readText)return;
-  try{const t=(await navigator.clipboard.readText()||'').trim();
-    if(!looksLikeOrder(t)||t===lastClip||mode!=='dan'||$('#sheetBg').hidden||$('#pasteText').value.trim())return;
-    $('#pasteText').value=t;pasteFlip=new Set();buildPaste();toast('Đã dán tin vừa chép.')}catch(e){}
-}
-$('#addBtn').onclick=()=>{openForm(null);tryAutoPaste()};
+$('#addBtn').onclick=()=>openForm(null);
 $('#closeForm').onclick=closeForm;
 $('#cancelForm').onclick=closeForm;
 $('#cancelForm2').onclick=closeForm;
@@ -1062,17 +1053,13 @@ $('#fShop').addEventListener('change',()=>setShop($('#fShop').value.trim()));
 $('#fShopPhone').addEventListener('input',()=>{const k=shopByPhone($('#fShopPhone').value);if(k&&!$('#fShop').value.trim()){$('#fShop').value=k;setShop(k,true)}});
 $('#fShop').addEventListener('input',()=>{const k=shopsList().find(x=>x.toLowerCase()===$('#fShop').value.trim().toLowerCase());if(k)setShop(k)});
 let pt;$('#pasteText').addEventListener('input',()=>{clearTimeout(pt);pt=setTimeout(buildPaste,250)});
+$('#pasteText').addEventListener('paste',()=>{setTimeout(()=>{pasteFlip=new Set();buildPaste();try{$('#pasteText').blur()}catch(e){}},30)});
 $('#pasteShopInp').addEventListener('input',()=>{pasteShop=$('#pasteShopInp').value.trim();clearTimeout(pt);pt=setTimeout(()=>{$('#pastePhi').value='';buildPaste()},300)});
 $('#pastePhi').addEventListener('input',()=>{clearTimeout(pt);pt=setTimeout(buildPaste,250)});
 $('#pasteList').addEventListener('click',e=>{const f=e.target.closest('[data-flip]');if(!f)return;e.preventDefault();const i=+f.dataset.flip;pasteFlip.has(i)?pasteFlip.delete(i):pasteFlip.add(i);buildPaste()});
 $('#pasteText').addEventListener('input',()=>{pasteFlip=new Set()});
 $('#pasteList').addEventListener('change',e=>{const c=e.target.closest('input[data-i]');if(!c)return;pasteItems[+c.dataset.i].pick=c.checked;renderPasteList()});
 $('#pasteSave').onclick=savePaste;
-$('#pasteClip').onclick=async()=>{
-  try{const t=await navigator.clipboard.readText();
-    if(!t||!t.trim()){toast('Chưa có tin nào được chép. Vào Zalo, giữ tay vào tin đơn, chọn Sao chép.');return}
-    $('#pasteText').value=t.trim();pasteFlip=new Set();buildPaste();toast('Đã dán tin.')}
-  catch(e){toast('Máy chưa cho dán tự động. Giữ tay vào ô bên dưới rồi chọn Dán.');try{$('#pasteText').focus()}catch(_){}}};
 $('#saveNext').onclick=()=>saveQuick(true);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-copy]');if(!b)return;const p=b.dataset.copy;
   try{navigator.clipboard.writeText(p).then(()=>toast('Đã chép số '+p),()=>toast('Số điện thoại: '+p))}catch(err){toast('Số điện thoại: '+p)}});
