@@ -182,7 +182,8 @@ textarea.inp{min-height:84px;resize:vertical}
 .sheet-foot .btn{padding:14px 6px;font-size:15px}
 .sheet-foot.two{grid-template-columns:1fr 2fr}
 .sheet-foot .btn:disabled{opacity:.45}
-.modes{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px}
+.modes:not([hidden]){display:grid;}
+.modes{grid-template-columns:1fr 1fr;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px}
 .modes button{border:0;background:none;border-radius:9px;padding:9px;font-weight:700;font-size:14px;color:var(--muted)}
 .modes button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .shopchips.big button{padding:9px 14px;font-size:14px;font-weight:600;border-radius:12px}
@@ -372,7 +373,7 @@ h3.mini{margin:0;font-size:15px}
   </section>
 </main>
 
-<button class="fab" id="addBtn"><span>+</span> Thêm đơn</button>
+<button class="fab" id="addBtn"><span>📷</span> Quét mã thêm đơn</button>
 
 <nav class="tabs" aria-label="Chuyển màn hình">
   <div class="tabs-in" role="tablist">
@@ -386,18 +387,19 @@ h3.mini{margin:0;font-size:15px}
   <form class="sheet" id="form" novalidate>
     <div class="sheet-h"><h3 id="formTitle">Thêm đơn</h3><button type="button" class="x" id="closeForm" aria-label="Đóng">✕</button></div>
 
-    <div class="modes" id="modes">
+    <div class="modes" id="modes" hidden>
       <button type="button" data-m="dan" aria-pressed="true">Dán tin Zalo</button>
       <button type="button" data-m="nhanh" aria-pressed="false">Nhập tay</button>
     </div>
 
     <!-- Chế độ dán tin: 1 hoặc nhiều đơn -->
     <div id="pasteMode" hidden class="wrap" style="gap:10px">
-      <label class="btn sec scanbtn" for="scanCam">📷 Chụp phiếu đơn / quét mã</label>
+      <label class="btn sec scanbtn" for="scanCam">📷 Chụp lại phiếu khác</label>
       <input type="file" id="scanCam" accept="image/*" capture="environment" hidden>
       <div class="scanrow"><label for="scanPick" class="linkbtn">Hoặc chọn ảnh phiếu có sẵn trong máy</label><input type="file" id="scanPick" accept="image/*" hidden></div>
       <div class="scanstat" id="scanStat" hidden></div>
-      <textarea class="inp pastebox" id="pasteText" placeholder="Giữ tay vào đây, chọn Dán.&#10;1 đơn hay nhiều đơn đều được.&#10;&#10;Ví dụ:&#10;Shop Hoa Mai gửi:&#10;1. 22 Hạ Long, 0912345678, thu 350k&#10;2. Giếng Đáy, 0988111222, thu 520k"></textarea>
+      <label for="pasteText" id="pasteLbl" class="sub" style="margin:0" hidden>Chữ đọc được trên phiếu (sai chỗ nào sửa trực tiếp ở đây):</label>
+      <textarea class="inp" id="pasteText" style="min-height:110px;font-size:14px" hidden></textarea>
       <span class="hint" style="font-size:12px;color:var(--muted)">Có thể bấm nút micro trên bàn phím điện thoại để đọc đơn thay vì gõ.</span>
       <div class="field" id="pasteShopBox" hidden>
         <label for="pasteShopInp">Nơi gửi cho đơn tin không ghi <span class="opt">không bắt buộc</span></label>
@@ -491,26 +493,19 @@ h3.mini{margin:0;font-size:15px}
     <div class="sheet-h"><h3 id="helpTitle">Hướng dẫn sử dụng</h3><button type="button" class="x" id="helpClose" aria-label="Đóng">✕</button></div>
 
     <details open>
-      <summary>1. Thêm đơn bằng cách dán tin Zalo</summary>
+      <summary>1. Quét mã thêm đơn</summary>
       <ol>
-        <li>Trong nhóm Zalo, giữ tay vào tin đơn, chọn <b>Sao chép</b>.</li>
-        <li>Mở Sổ Ship, bấm <b>+ Thêm đơn</b>.</li>
-        <li>Giữ tay vào ô vàng, chọn <b>Dán</b>. Sổ tự tách nơi gửi, người nhận, số điện thoại, tiền thu hộ, phí ship.</li>
-        <li>Kiểm tra lại, bỏ tích đơn nào sai, bấm <b>Thêm đơn</b>.</li>
+        <li>Bấm <b>📷 Quét mã thêm đơn</b> ở góc dưới, máy ảnh mở ra.</li>
+        <li>Chụp phiếu đơn thẳng, đủ sáng, rõ chữ.</li>
+        <li>Sổ quét mã vạch / mã QR để lấy mã đơn, đọc chữ trên phiếu để lấy nơi gửi, người nhận, số điện thoại, địa chỉ, tiền thu hộ.</li>
+        <li>Kiểm tra lại, bấm <b>Thêm đơn</b>.</li>
       </ol>
-      <p>Một tin có nhiều đơn (đánh số 1, 2, 3 hoặc mỗi dòng một đơn) cũng tách được. Nếu sổ nhầm số người gửi với số khách, bấm dòng chữ xanh <b>⇄ đổi</b>.</p>
+      <p>Lần đầu dùng cần có mạng để tải bộ đọc chữ (vài MB), các lần sau nhanh hơn. Chữ đọc được hiện trong ô bên dưới, sai chỗ nào sửa trực tiếp trong ô. Phiếu viết tay hoặc số điện thoại bị che (kiểu 09****678) thì không đọc đủ được.</p>
     </details>
 
     <details>
-      <summary>Chụp phiếu đơn / quét mã</summary>
-      <p>Đơn có phiếu in (của hãng giao hàng hoặc shop tự in): bấm <b>+ Thêm đơn</b> → <b>📷 Chụp phiếu đơn / quét mã</b>, chụp thẳng, đủ sáng, rõ chữ. Sổ quét <b>mã vạch / mã QR</b> để lấy mã đơn và đọc chữ trên phiếu để lấy người gửi, người nhận, số điện thoại, địa chỉ, tiền thu hộ.</p>
-      <p>Lần đầu dùng cần có mạng để tải bộ đọc chữ (vài MB), các lần sau nhanh hơn. Chữ đọc được hiện trong ô vàng, sai chỗ nào sửa trực tiếp trong ô. Phiếu viết tay hoặc số điện thoại bị che (kiểu 09****678) thì không đọc đủ được.</p>
-    </details>
-
-    <details>
-      <summary>2. Nhập tay</summary>
-      <p>Trong bảng thêm đơn chọn <b>Nhập tay</b>. Ghi nơi gửi (không bắt buộc), người nhận, tiền thu hộ, phí ship. Tiền gõ theo nghìn: gõ <b>350</b> là 350.000đ.</p>
-      <p>Nhận nhiều đơn của cùng một nơi gửi thì bấm <b>Lưu, thêm tiếp</b>: nơi gửi được giữ lại, chỉ cần gõ đơn tiếp theo.</p>
+      <summary>2. Sửa đơn</summary>
+      <p>Thông tin nào sổ đọc sai hoặc thiếu (tiền thu hộ, phí ship, địa chỉ…), bấm nút <b>Sửa</b> trên thẻ đơn để chỉnh lại.</p>
     </details>
 
     <details>
@@ -681,12 +676,12 @@ function renderOrders(os){
   if(!os.length){
     if(!state.orders.length){L.innerHTML=`<div class="empty" style="text-align:left;display:flex;flex-direction:column;gap:10px">
       <b style="color:var(--ink);font-size:16px">Sổ đang trống, bắt đầu ghi đơn nhé</b>
-      <span>1. Bấm <b>+ Thêm đơn</b>, ghi nơi gửi, nơi nhận, số tiền, bấm Lưu.</span>
-      <span>2. Hoặc chép tin đơn trong nhóm Zalo, chọn <b>Dán tin Zalo</b>, sổ tự tách đơn.</span>
+      <span>1. Bấm <b>📷 Quét mã thêm đơn</b>, chụp phiếu đơn.</span>
+      <span>2. Xem thông tin sổ đọc được (nơi gửi, người nhận, tiền thu hộ), bấm <b>Thêm đơn</b>.</span>
       <span>3. Cuối ngày vào <b>Đối soát</b>, bấm sao chép rồi gửi Zalo cho nơi gửi.</span>
       <button type="button" class="btn sec" id="loadSample">Xem thử với dữ liệu mẫu</button>
       <button type="button" class="btn sec" onclick="document.getElementById('helpBg').hidden=false">Xem hướng dẫn đầy đủ</button></div>`;return}
-    L.innerHTML='<div class="empty">Chưa có đơn nào trong ngày này.<br>Bấm <b>+ Thêm đơn</b> ở góc dưới để ghi đơn đầu tiên.</div>';return}
+    L.innerHTML='<div class="empty">Chưa có đơn nào trong ngày này.<br>Bấm <b>📷 Quét mã thêm đơn</b> ở góc dưới để thêm đơn.</div>';return}
   const pend=os.filter(o=>o.status==='dang');
   const bulk=pend.length>=2?`<div class="bulkbar"><span>Còn <b>${pend.length}</b> đơn đang giao</span><button type="button" id="bulkGiao">✓ Giao xong hết ${pend.length} đơn</button></div>`:'';
   const nos={};dayOrders(day).slice().sort((a,b)=>a.t-b.t).forEach((o,i)=>nos[o.id]=i+1);
@@ -1143,7 +1138,7 @@ function saveQuick(andNext){if(!editId)dem('them-don-nhap-tay','Thêm đơn nh�
     const n=dayOrders(day).length;toast(`Đã lưu. Hôm nay ${n} đơn. Nhập đơn tiếp.`);try{$('#fHang').focus()}catch(e){}return}
   closeForm();toast(wasEdit?'Đã lưu thay đổi.':'Đã thêm đơn.');
 }
-function savePaste(){dem('them-don-dan-tin','Thêm đơn bằng dán tin');
+function savePaste(){dem('them-don-quet-ma','Thêm đơn bằng quét mã');
   const pick=pasteItems.filter(o=>o.pick);if(!pick.length)return;
   if(state.sample)clearSampleData(true);
   const t=Date.now();
@@ -1169,7 +1164,8 @@ document.addEventListener('click',e=>{if(!e.target.closest('#undoBulk')||!lastBu
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{view=b.dataset.v;render();window.scrollTo(0,0)});
 $('#prevDay').onclick=()=>{day=addDays(day,-1);render()};
 $('#nextDay').onclick=()=>{if(day<today()){day=addDays(day,1);render()}};
-$('#addBtn').onclick=()=>openForm(null);
+$('#addBtn').onclick=()=>{$('#scanCam').click()};
+function openScanSheet(){if(!$('#sheetBg').hidden&&!editId)return;openForm(null);$('#modes').hidden=true;setMode('dan');$('#pasteLbl').hidden=true;$('#pasteText').hidden=true}
 $('#helpBtn').onclick=()=>{$('#helpBg').hidden=false};
 $('#helpClose').onclick=()=>{$('#helpBg').hidden=true};
 $('#helpBg').addEventListener('click',e=>{if(e.target.id==='helpBg')$('#helpBg').hidden=true});
@@ -1191,7 +1187,7 @@ $('#pasteText').addEventListener('paste',()=>{setTimeout(()=>{pasteFlip=new Set(
 $('#pasteShopInp').addEventListener('input',()=>{pasteShop=$('#pasteShopInp').value.trim();clearTimeout(pt);pt=setTimeout(()=>{$('#pastePhi').value='';buildPaste()},300)});
 $('#pastePhi').addEventListener('input',()=>{clearTimeout(pt);pt=setTimeout(buildPaste,250)});
 $('#pasteList').addEventListener('click',e=>{const f=e.target.closest('[data-flip]');if(!f)return;e.preventDefault();const i=+f.dataset.flip;pasteFlip.has(i)?pasteFlip.delete(i):pasteFlip.add(i);buildPaste()});
-$('#pasteText').addEventListener('input',e=>{pasteFlip=new Set();if(!scanning){pasteSingle=false;scanCode=''}});
+$('#pasteText').addEventListener('input',()=>{pasteFlip=new Set();pasteSingle=true});
 $('#pasteList').addEventListener('change',e=>{const c=e.target.closest('input[data-i]');if(!c)return;pasteItems[+c.dataset.i].pick=c.checked;renderPasteList()});
 $('#pasteSave').onclick=savePaste;
 /* ===== Chụp phiếu: quét mã vạch / mã QR và đọc chữ trên phiếu ===== */
@@ -1218,7 +1214,7 @@ async function readText(canvas,onPct){
   const r=await ocrWorker.recognize(canvas);return(r&&r.data&&r.data.text)||'';
 }
 async function handleScan(file){
-  if(!file)return;scanning=true;
+  if(!file)return;openScanSheet();scanning=true;$('#pasteText').value='';pasteItems=[];renderPasteList();
   let thumb='';try{const tc=await fileToCanvas(file,120);thumb=tc.toDataURL('image/jpeg',.7)}catch(e){}
   try{
     scanMsg('Đang quét mã trên phiếu…','',thumb);
@@ -1232,7 +1228,7 @@ async function handleScan(file){
     const all=(qrText+txt).replace(/[ \t]+/g,' ').replace(/\n{2,}/g,'\n').trim();
     if(!all&&!code){scanMsg('Không đọc được phiếu. Chụp lại gần hơn, đủ sáng, phiếu thẳng, hoặc nhập tay.','bad',thumb);return}
     scanCode=code;pasteSingle=true;pasteFlip=new Set();
-    $('#pasteText').value=all;buildPaste();
+    $('#pasteText').value=all;$('#pasteLbl').hidden=false;$('#pasteText').hidden=false;buildPaste();
     const it=pasteItems[0]||{};
     const got=[it.shop||it.senderPhone?'người gửi':'',it.ten||it.phone?'người nhận':'',it.hang?'tiền thu hộ':'',code?'mã đơn':''].filter(Boolean);
     scanMsg(got.length?`Đã đọc được: ${got.join(', ')}. Kiểm tra lại bên dưới, sửa chữ trong ô nếu sai.`:'Đã đọc chữ nhưng chưa nhận ra thông tin đơn. Xem chữ trong ô và sửa lại.',got.length?'good':'bad',thumb);

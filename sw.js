@@ -1,6 +1,6 @@
 // Sổ Ship – cho phép mở ứng dụng khi mất sóng.
 // Khi sửa index.html, tăng số phiên bản dưới đây để máy người dùng nhận bản mới.
-const PHIEN_BAN = 'so-ship-v3';
+const PHIEN_BAN = 'so-ship-v4';
 const TEP_CAN_LUU = [
   './', './index.html', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png',
