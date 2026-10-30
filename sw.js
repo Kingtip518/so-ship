@@ -1,6 +1,6 @@
 // Sổ Ship – cho phép mở ứng dụng khi mất sóng.
 // Khi sửa index.html, tăng số phiên bản dưới đây để máy người dùng nhận bản mới.
-const PHIEN_BAN = 'so-ship-v1';
+const PHIEN_BAN = 'so-ship-v3';
 const TEP_CAN_LUU = [
   './', './index.html', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png',
@@ -24,7 +24,7 @@ self.addEventListener('fetch', e => {
     return;
   }
   e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request).then(r => {
-    if (r.ok && (e.request.url.startsWith(self.location.origin) || e.request.url.includes('cdnjs') || e.request.url.includes('fonts.g'))) {
+    if (r.ok && (e.request.url.startsWith(self.location.origin) || e.request.url.includes('cdnjs') || e.request.url.includes('fonts.g') || e.request.url.includes('cdn.jsdelivr.net') || e.request.url.includes('unpkg.com'))) {
       const c = r.clone(); caches.open(PHIEN_BAN).then(x => x.put(e.request, c));
     }
     return r;
