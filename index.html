@@ -359,13 +359,14 @@ h3.mini{margin:0;font-size:15px}
     <div class="sheet-h"><h3 id="formTitle">Thêm đơn</h3><button type="button" class="x" id="closeForm" aria-label="Đóng">✕</button></div>
 
     <div class="modes" id="modes">
-      <button type="button" data-m="nhanh" aria-pressed="true">Nhập tay</button>
-      <button type="button" data-m="dan" aria-pressed="false">Dán tin Zalo</button>
+      <button type="button" data-m="dan" aria-pressed="true">Dán tin Zalo</button>
+      <button type="button" data-m="nhanh" aria-pressed="false">Nhập tay</button>
     </div>
 
     <!-- Chế độ dán tin: 1 hoặc nhiều đơn -->
     <div id="pasteMode" hidden class="wrap" style="gap:10px">
-      <textarea class="inp" id="pasteText" style="min-height:130px" placeholder="Dán tin đơn vào đây, 1 đơn hay nhiều đơn đều được.&#10;&#10;Ví dụ:&#10;Shop Hoa Mai gửi:&#10;1. 22 Hạ Long, 0912345678, thu 350k&#10;2. Giếng Đáy, 0988111222, thu 520k"></textarea>
+      <button type="button" class="btn pri" id="pasteClip" style="padding:13px;font-size:16px">Dán tin vừa chép</button>
+      <textarea class="inp" id="pasteText" style="min-height:120px" placeholder="Hoặc giữ tay vào đây để dán tin đơn, 1 đơn hay nhiều đơn đều được, 1 đơn hay nhiều đơn đều được.&#10;&#10;Ví dụ:&#10;Shop Hoa Mai gửi:&#10;1. 22 Hạ Long, 0912345678, thu 350k&#10;2. Giếng Đáy, 0988111222, thu 520k"></textarea>
       <span class="hint" style="font-size:12px;color:var(--muted)">Có thể bấm nút micro trên bàn phím điện thoại để đọc đơn thay vì gõ.</span>
       <div class="field" id="pasteShopBox" hidden>
         <label for="pasteShopInp">Nơi gửi cho đơn tin không ghi <span class="opt">không bắt buộc</span></label>
@@ -776,7 +777,7 @@ function setSeg(id,v){document.querySelectorAll('#'+id+' button').forEach(b=>b.s
 function shopsList(){const s=new Set(state.shops||[]);state.orders.forEach(o=>s.add(o.shop));return[...s].filter(Boolean)}
 function recentShops(){const seen=[];state.orders.slice().sort((a,b)=>b.t-a.t).forEach(o=>{if(o.shop&&o.shop!=='Chưa ghi nơi gửi'&&!seen.includes(o.shop))seen.push(o.shop)});return seen.slice(0,5)}
 
-let mode='nhanh',pasteItems=[],pasteShop='',pasteFlip=new Set();
+let mode='dan',pasteItems=[],pasteShop='',pasteFlip=new Set();
 const shopDef=n=>(state.shopDefs||{})[n]||null;
 function setShop(n,fromPhone){
   if(!fromPhone)$('#fShop').value=n;
@@ -791,7 +792,7 @@ function setMode(m){mode=m;
   document.querySelectorAll('#modes button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m)));
   $('#quickMode').hidden=m!=='nhanh';$('#footQuick').hidden=m!=='nhanh';
   $('#pasteMode').hidden=m!=='dan';$('#footPaste').hidden=m!=='dan';
-  setTimeout(()=>{try{(m==='dan'?$('#pasteText'):$('#fHang')).focus({preventScroll:true})}catch(e){}},60);
+  if(m==='nhanh')setTimeout(()=>{try{$('#fHang').focus({preventScroll:true})}catch(e){}},60);
 }
 function clearOrderFields(){
   ['fTen','fAddr','fPhone','fHang','fUng','fNote'].forEach(id=>$('#'+id).value='');
@@ -817,7 +818,7 @@ function openForm(o){
     document.querySelectorAll('#shopChips button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.s===o.shop)));
   } else setShop(state.sample?'':(recentShops()[0]||''));
   $('#sheetBg').hidden=false;updatePreview();
-  setMode(o?'nhanh':mode);
+  setMode(o?'nhanh':'dan');
 }
 function closeForm(){$('#sheetBg').hidden=true;editId=null}
 
@@ -1049,6 +1050,11 @@ $('#pasteList').addEventListener('click',e=>{const f=e.target.closest('[data-fli
 $('#pasteText').addEventListener('input',()=>{pasteFlip=new Set()});
 $('#pasteList').addEventListener('change',e=>{const c=e.target.closest('input[data-i]');if(!c)return;pasteItems[+c.dataset.i].pick=c.checked;renderPasteList()});
 $('#pasteSave').onclick=savePaste;
+$('#pasteClip').onclick=async()=>{
+  try{const t=await navigator.clipboard.readText();
+    if(!t||!t.trim()){toast('Chưa có tin nào được chép. Vào Zalo, giữ tay vào tin đơn, chọn Sao chép.');return}
+    $('#pasteText').value=t;pasteFlip=new Set();buildPaste();toast('Đã dán tin.')}
+  catch(e){toast('Máy chưa cho dán tự động. Giữ tay vào ô bên dưới rồi chọn Dán.');try{$('#pasteText').focus()}catch(_){}}};
 $('#saveNext').onclick=()=>saveQuick(true);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-copy]');if(!b)return;const p=b.dataset.copy;
   try{navigator.clipboard.writeText(p).then(()=>toast('Đã chép số '+p),()=>toast('Số điện thoại: '+p))}catch(err){toast('Số điện thoại: '+p)}});
