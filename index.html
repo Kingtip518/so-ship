@@ -173,6 +173,7 @@ details.more summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--m
 .pcard input[type=checkbox]{width:20px;height:20px;margin-top:2px;accent-color:var(--ink);flex-shrink:0}
 .pcard .pc-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:14px}
 .pcard .pc-money{font-family:var(--display);font-size:20px;font-weight:700}
+.pcard .flip{align-self:flex-start;border:0;background:none;color:var(--wait);font-size:12px;font-weight:600;padding:2px 0;text-decoration:underline}
 .pcard .miss{color:var(--bad);font-size:12px;font-weight:600}
 .bulkbar{display:flex;gap:8px;align-items:center;justify-content:space-between;background:var(--ok-soft);border-radius:12px;padding:8px 10px;font-size:14px;flex-wrap:wrap}
 .bulkbar button{border:0;background:var(--ok);color:#fff;border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px}
@@ -361,6 +362,11 @@ h3.mini{margin:0;font-size:15px}
     <div id="pasteMode" hidden class="wrap" style="gap:10px">
       <textarea class="inp" id="pasteText" style="min-height:130px" placeholder="Dán tin đơn vào đây, 1 đơn hay nhiều đơn đều được.&#10;&#10;Ví dụ:&#10;Shop Hoa Mai gửi:&#10;1. 22 Hạ Long, 0912345678, thu 350k&#10;2. Giếng Đáy, 0988111222, thu 520k"></textarea>
       <span class="hint" style="font-size:12px;color:var(--muted)">Có thể bấm nút micro trên bàn phím điện thoại để đọc đơn thay vì gõ.</span>
+      <div class="field" id="pasteShopBox" hidden>
+        <label>Tin không ghi shop. Đơn này của shop nào?</label>
+        <div class="shopchips big" id="pasteShopChips"></div>
+        <input class="inp" id="pasteShopInp" list="shopList" placeholder="Hoặc gõ tên shop / người gửi" autocomplete="off">
+      </div>
       <div class="field" id="pastePhiBox" hidden>
         <label for="pastePhi">Phí ship cho đơn tin không ghi phí</label>
         <input class="inp num" id="pastePhi" inputmode="numeric" placeholder="25 = 25.000đ">
@@ -559,12 +565,12 @@ function renderOrders(os){
     const thuKhach=o.hang+(o.phiBy==='khach'?o.phi:0);
     return `<article class="order" data-id="${o.id}">
       <div class="o-top">
-        <div style="min-width:0"><div class="o-shop">${esc(o.shop)}</div><div class="o-addr">${esc(o.addr)}${o.phone?' · '+esc(o.phone):''}</div>${o.note?`<div class="o-addr">Ghi chú: ${esc(o.note)}</div>`:''}</div>
+        <div style="min-width:0"><div class="o-shop">${esc(o.shop)}</div><div class="o-addr">${o.ten?'<b style="color:var(--ink)">'+esc(o.ten)+'</b> · ':''}${esc(o.addr)}${o.phone?' · '+esc(o.phone):''}</div>${o.note?`<div class="o-addr">Ghi chú: ${esc(o.note)}</div>`:''}</div>
         <div class="o-money"><b class="num">${shortMoney(thuKhach)}</b><small>thu của khách</small></div>
       </div>
       <div class="chips">
         <span class="chip st-${o.status}">${ST[o.status]}</span>
-        <span class="chip plain num">Ship ${shortMoney(o.phi)} · ${o.phiBy==='khach'?'khách trả':'shop trả'}</span>
+        <span class="chip plain num">${o.phi?`Ship ${shortMoney(o.phi)} · ${o.phiBy==='khach'?'khách trả':'shop trả'}`:'Chưa có phí ship'}</span>
         ${o.ung?`<span class="chip plain num">Đã ứng ${shortMoney(o.ung)}</span>`:''}
         ${b?`<span class="chip warn">Số này từng bom ${b} lần</span>`:(()=>{const ci=custInfo(o.phone,o.id);return ci&&ci.giao>=2?`<span class="chip st-giao">Khách quen ${ci.giao} lần</span>`:''})()}
       </div>
@@ -601,7 +607,7 @@ function settleText(r){
   if(r.phiBom)lines.push(`• Trừ phí ship đơn bom: ${money(r.phiBom)}`);
   lines.push(r.tra>=0?`=> CHUYỂN LẠI SHOP: ${money(r.tra)}`:`=> SHOP CẦN TRẢ SHIPPER: ${money(-r.tra)}`);
   lines.push('');lines.push('Chi tiết:');
-  let i=1;r.list.forEach(o=>{if(o.status==='giao'||o.status==='bom')lines.push(`${i++}. ${o.addr} – ${money(o.hang)} – ${ST[o.status]}`)});
+  let i=1;r.list.forEach(o=>{if(o.status==='giao'||o.status==='bom')lines.push(`${i++}. ${o.ten?o.ten+', ':''}${o.addr} – ${money(o.hang)} – ${ST[o.status]}`)});
   if(r.pend)lines.push(`(Còn ${r.pend} đơn đang giao/hẹn lại, chưa tính)`);
   if(state.name)lines.push('',state.name);
   return lines.join('\n');
@@ -762,7 +768,7 @@ function setSeg(id,v){document.querySelectorAll('#'+id+' button').forEach(b=>b.s
 function shopsList(){const s=new Set(state.shops||[]);state.orders.forEach(o=>s.add(o.shop));return[...s].filter(Boolean)}
 function recentShops(){const seen=[];state.orders.slice().sort((a,b)=>b.t-a.t).forEach(o=>{if(o.shop&&!seen.includes(o.shop))seen.push(o.shop)});return seen.slice(0,5)}
 
-let mode='nhanh',pasteItems=[];
+let mode='nhanh',pasteItems=[],pasteShop='',pasteFlip=new Set();
 const shopDef=n=>(state.shopDefs||{})[n]||null;
 function setShop(n){
   $('#fShop').value=n;
@@ -789,9 +795,9 @@ function openForm(o){
   $('#modes').hidden=!!o;$('#saveNext').hidden=!!o;
   $('#saveBtn').textContent=o?'Lưu thay đổi':'Lưu';
   $('#footQuick').style.gridTemplateColumns=o?'1fr 2fr':'';
-  $('#pasteText').value='';$('#pastePhi').value='';$('#pastePhiBox').hidden=true;pasteItems=[];renderPasteList();
+  $('#pasteText').value='';$('#pastePhi').value='';pasteShop='';pasteFlip=new Set();$('#pasteShopInp').value='';$('#pasteShopBox').hidden=true;$('#pastePhiBox').hidden=true;pasteItems=[];renderPasteList();
   $('#shopList').innerHTML=shopsList().map(s=>`<option value="${esc(s)}">`).join('');
-  $('#shopChips').innerHTML=recentShops().map(s=>`<button type="button" data-s="${esc(s)}" aria-pressed="false">${esc(s)}</button>`).join('');
+  $('#shopChips').innerHTML=[...recentShops(),...(recentShops().includes('Khách gửi lẻ')?[]:['Khách gửi lẻ'])].map(s=>`<button type="button" data-s="${esc(s)}" aria-pressed="false">${esc(s)}</button>`).join('');
   clearOrderFields();$('#fPhi').value='';form.phiBy='khach';setSeg('segPhi','khach');
   $('#more').open=false;
   if(o){
@@ -841,23 +847,73 @@ function findShop(text){
   return known||'';
 }
 function parseOne(raw){
-  const o={shop:findShop(raw),phone:'',hang:0,phi:0,phiBy:'',addr:''};
+  const o={shop:findShop(raw),phone:'',hang:0,phi:0,phiBy:'',addr:'',ten:'',mon:''};
   let text=raw;
   const ph=text.match(PHONE_RE);
   if(ph){o.phone=normPhone(ph[0]).replace(/(\d{4})(\d{3})(\d+)/,'$1 $2 $3');text=text.replace(ph[0],' ')}
   const low=text.toLowerCase();
   o.hang=moneyAfter(low,/(thu hộ|thu ho|tiền hàng|tien hang|cod|thu)\s*[:=]?\s*/i);
   const phi=moneyAfter(low,/(phí ship|phi ship|ship|phí|cước|cuoc)\s*[:=]?\s*/i);if(phi&&phi<1000000)o.phi=phi;
-  if(!o.hang){const mm=low.match(/(\d+(?:[.,]\d+)?\s*(?:k|tr|triệu|nghìn|ngàn)\d{0,3})/i);if(mm)o.hang=parseMoney(mm[1])}
+  if(!o.hang){const mm=low.match(/(\d+(?:[.,]\d+)?\s*(?:k|tr|triệu|nghìn|ngàn)\d{0,3})(?![a-zà-ỹ])/i);if(mm)o.hang=parseMoney(mm[1])}
   if(/shop trả ship|shop tra ship|shop chịu ship|freeship|free ship|miễn ship/i.test(raw))o.phiBy='shop';
-  let ad=raw.match(/(?:giao(?:\s*(?:đến|tới|cho|về))?|đ\/c|địa chỉ|dia chi|đc|dc)\s*[:\-]?\s*([^,\n]+(?:,[^,\n0-9]*[a-zA-ZÀ-ỹ][^,\n]*){0,2})/i);
+  // Tên khách: "chị Lan", "anh Hùng"...
+  const nm=text.match(/(?:^|[\s,.:;])((?:anh|chị|chi|cô|chú|bác|em|ông|bà)\s+[A-ZÀ-Ỹa-zà-ỹ][a-zà-ỹ]*)/i);
+  if(nm){o.ten=nm[1].trim().replace(/\s+([a-zà-ỹ])/,(m,c)=>' '+c.toUpperCase())}
+  // Món hàng: "gạo 22kg", "nước 2 thùng", "2 thùng nước"
+  const UNIT='kg|KG|Kg|gk|kí|ký|kgs|g|gr|bao|thùng|hộp|cái|chiếc|túi|bịch|lít|lit|chai|lốc|két|bó|quả|hũ|đôi|bộ|cuốn|gói';
+  const t2=nm?text.replace(nm[1],' '):text;
+  let mon=t2.match(new RegExp('((?:[A-ZÀ-Ỹa-zà-ỹ][a-zà-ỹ]*)(?:\\s+[a-zà-ỹ]+)?)\\s*(\\d+(?:[.,]\\d+)?)\\s*('+UNIT+')(?![A-Za-zÀ-ỹ])'));
+  if(mon&&/^(chị|anh|cô|chú|bác|em|ông|bà|thu|ship|phí|lấy|giao|số|tổ|khu|ngõ|ngách|kiệt|hẻm|đường|phố)$/i.test(mon[1].split(/\s+/)[0]))mon=null;
+  if(!mon){const m2=t2.match(new RegExp('(\\d+(?:[.,]\\d+)?)\\s*('+UNIT+')\\s+([a-zà-ỹ]+(?:\\s+[a-zà-ỹ]+)?)'));if(m2)mon=m2}
+  if(mon){o.mon=mon[0].trim()}
+  let ad=text.match(/(?:giao(?:\s*(?:đến|tới|cho|về))?|đ\/c|địa chỉ|dia chi|đc|dc)\s*[:\-]?\s*([^,\n]+(?:,[^,\n0-9]*[a-zA-ZÀ-ỹ][^,\n]*){0,2})/i);
   let a=ad?ad[1]:'';
-  if(!a){ // dòng kiểu "22 Hạ Long, 0912..., thu 350k": lấy phần trước dấu phẩy đầu tiên không phải số đt / tiền
-    a=(text.split(/[,\n]/).map(x=>x.trim()).find(x=>x.length>3&&/[a-zA-ZÀ-ỹ]/.test(x)&&!/^(thu|ship|phí|cod|cước|sđt|sdt|shop)/i.test(x))||'');
+  if(!a){ // Không có chữ "giao/địa chỉ": bỏ tên khách, món hàng, số tiền, số điện thoại, phần còn lại là địa chỉ
+    let r=text;
+    if(o.shop)r=r.replace(new RegExp(o.shop.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'),' ');
+    r=r.replace(/shop\s+[^,\n]*/i,' ');
+    if(nm)r=r.replace(nm[1],' ');
+    if(mon)r=r.replace(mon[0],' ');
+    r=r.replace(/(thu hộ|thu ho|tiền hàng|tien hang|cod|thu|phí ship|phi ship|ship|phí|cước|cuoc|sđt|sdt|đt|dt)\s*[:=]?/gi,' ');
+    r=r.replace(/\d+(?:[.,]\d+)*\s*(?:k|tr|triệu|trieu|nghìn|nghin|ngàn|ngan|đ|vnd)\d{0,3}(?![a-zà-ỹ])/gi,' ');
+    r=r.replace(/shop trả|shop tra|shop chịu|freeship|free ship|miễn/gi,' ');
+    a=r.split(/[\n]/).map(x=>x.replace(/\s*,\s*,+/g,',').replace(/^[\s,.;:\-]+|[\s,.;:\-]+$/g,'').replace(/\s+/g,' ')).filter(x=>/[a-zA-ZÀ-ỹ]/.test(x)).join(', ');
   }
+  if(nm)a=a.replace(nm[1],' ');if(mon)a=a.replace(mon[0],' ');
+  a=a.replace(/(gửi cho|gửi tới|gửi đến|gửi về|gui cho|giao cho|giao tới|giao đến|giao về|người nhận|nguoi nhan|nhận\s*:|đ\/c|địa chỉ|dia chi)\s*[:\-]?/gi,' ').replace(/\s+/g,' ');
   a=a.replace(/(sđt|sdt|đt|dt|thu|ship|cod)\b.*$/i,'').replace(/^shop\s+[^,]*$/i,'').trim().replace(/[,.\s]+$/,'');
   if(a.length>3)o.addr=a;
   return o;
+}
+/* Tách người gửi: số điện thoại nào là của người gửi, số nào của khách */
+const fmtPhone=p=>normPhone(p).replace(/(\d{4})(\d{3})(\d+)/,'$1 $2 $3');
+function shopByPhone(p){const n=normPhone(p);if(n.length<9)return'';for(const[k,v]of Object.entries(state.shopPhones||{}))if(normPhone(v)===n)return k;return''}
+const SEND_RE=/(người gửi|nguoi gui|nơi gửi|noi gui|bên gửi|ben gui|gửi từ|gui tu|gửi\s*:|gui\s*:|lấy hàng|lay hang|lấy ở|lấy tại|lay o|lay tai|điểm lấy|shop|cửa hàng|tiệm|quán)/gi;
+const RECV_RE=/(người nhận|nguoi nhan|bên nhận|ben nhan|nhận\s*:|nhan\s*:|gửi cho|gửi tới|gửi đến|gửi về|gui cho|giao cho|giao tới|giao đến|giao về|giao\s*:|giao|khách|kh\s*:)/gi;
+function lastIdx(re,t){let i=-1,m;re.lastIndex=0;while((m=re.exec(t)))i=m.index;return i}
+function extractSender(text,flip,headMode){
+  const phones=[...text.matchAll(new RegExp(PHONE_RE.source,'g'))];
+  if(!phones.length){return{name:'',phone:'',rest:text,n:0}}
+  let prev=0;const roles=phones.map(m=>{const ctx=text.slice(prev,m.index);prev=m.index+m[0].length;
+    if(shopByPhone(m[0]))return'S';
+    const s=lastIdx(SEND_RE,ctx),r=lastIdx(RECV_RE,ctx);return s>r?'S':r>s?'R':'?'});
+  let si=roles.indexOf('S');
+  if(si<0){if(headMode)si=0;else if(phones.length>=2)si=roles.indexOf('?')}
+  if(flip&&phones.length===2&&si>=0)si=1-si;
+  if(si<0)return{name:'',phone:'',rest:text,n:phones.length};
+  const pm=phones[si],ctxStart=si>0?phones[si-1].index+phones[si-1][0].length:0;
+  const ctx=text.slice(ctxStart,pm.index);
+  // điểm bắt đầu phần người gửi: nhãn "gửi/shop" gần nhất, hoặc đầu dòng/đầu đoạn
+  let st=lastIdx(SEND_RE,ctx);
+  if(st<0){const nl=ctx.lastIndexOf('\n');const cm=ctx.search(/[^,;.]*$/);st=Math.max(nl+1,si===0?0:cm)}
+  const segStart=ctxStart+st,segEnd=pm.index+pm[0].length;
+  const seg=text.slice(segStart,segEnd);
+  let name=seg.replace(pm[0],' ').replace(/(người gửi|nguoi gui|nơi gửi|noi gui|bên gửi|ben gui|gửi từ|gui tu|gửi|gui|lấy hàng(\s+(ở|tại))?|lay hang|lấy ở|lấy tại|điểm lấy|sđt|sdt|đt|dt|số)\s*[:\-]?/gi,' ')
+    .replace(/[,;:.\-]+/g,' ').replace(/\s+/g,' ').trim();
+  if(name){name=name.charAt(0).toUpperCase()+name.slice(1);if(name.length>40)name=name.slice(0,40).trim()}
+  const known=shopsList().find(k=>k.toLowerCase()===name.toLowerCase());if(known)name=known;
+  const byPhone=shopByPhone(pm[0]);
+  return{name:byPhone||name,phone:fmtPhone(pm[0]),rest:(text.slice(0,segStart)+' '+text.slice(segEnd)).trim(),n:phones.length};
 }
 function splitOrders(raw){
   const t=raw.replace(/\r/g,'').trim();if(!t)return{head:'',parts:[]};
@@ -867,21 +923,25 @@ function splitOrders(raw){
   if(marks.length>=2){const head=t.slice(0,marks[0].index);const parts=marks.map((m,i)=>t.slice(m.index+m[0].length,i+1<marks.length?marks[i+1].index:t.length).trim());return{head,parts}}
   // 2) Cách nhau bởi dòng trống
   const blocks=t.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
-  const hasData=x=>PHONE_RE.test(x)||/\d+\s*(k|tr|nghìn|ngàn)/i.test(x);
-  if(blocks.length>=2){const head=hasData(blocks[0])?'':blocks.shift();return{head,parts:blocks}}
-  // 3) Mỗi dòng có số điện thoại là một đơn
+  const hasMoney=x=>/\d+\s*(k|tr|triệu|nghìn|ngàn)(?![a-zà-ỹ])|\d{1,3}(?:[.,]\d{3})+\s*(đ|d|vnd)?/i.test(x);
+  const mBlocks=blocks.filter(hasMoney);
+  if(mBlocks.length>=2){return{head:blocks.filter(b=>!hasMoney(b)).join('\n'),parts:mBlocks}}
+  // 3) Mỗi dòng có số tiền là một đơn (dòng không có tiền là thông tin chung, ví dụ người gửi)
   const lines=t.split('\n').map(x=>x.trim()).filter(Boolean);
-  const withPhone=lines.filter(l=>PHONE_RE.test(l));
-  if(withPhone.length>=2){const head=lines.filter(l=>!hasData(l)).join(' ');return{head,parts:lines.filter(l=>hasData(l))}}
+  const mLines=lines.filter(hasMoney);
+  if(mLines.length>=2&&mLines.every(l=>PHONE_RE.test(l))){return{head:lines.filter(l=>!hasMoney(l)).join('\n'),parts:mLines}}
   return{head:'',parts:[t]};
 }
 function buildPaste(){
   const {head,parts}=splitOrders($('#pasteText').value);
-  const headShop=head?findShop(head):'';
-  const headParsed=head?parseOne(head):{};
+  const hs=head?extractSender(head,false,true):{name:'',phone:'',rest:''};
+  const headShop=hs.name||(head?findShop(head):'')||(hs.phone?'Người gửi '+hs.phone:'');
+  const headParsed=head?parseOne(hs.rest||head):{};
   const prevPick=pasteItems.map(o=>o.pick);
-  pasteItems=parts.map(p=>{const o=parseOne(p);
-    o.shop=o.shop||headShop||findShop($('#pasteText').value)||recentShops()[0]||'';
+  pasteItems=parts.map((p,i)=>{const es=extractSender(p,pasteFlip.has(i));const o=parseOne(es.rest);
+    o.senderPhone=es.phone||hs.phone||'';o.canFlip=es.n===2;
+    o.shopFound=es.name||(es.phone?'Người gửi '+es.phone:'')||o.shop||headShop||findShop($('#pasteText').value)||'';
+    o.shop=o.shopFound||pasteShop;
     const d=shopDef(o.shop);
     o.phiFromText=!!o.phi;
     if(!o.phi)o.phi=headParsed.phi||kToVnd($('#pastePhi').value)||(d?d.phi:0);
@@ -889,6 +949,10 @@ function buildPaste(){
     o.ci=custInfo(o.phone);if(!o.addr&&o.ci&&o.ci.lastAddr){o.addr=o.ci.lastAddr;o.addrMem=true}
     o.pick=!!(o.hang||o.phi)&&!(o.ci&&o.ci.bom);return o});
   if(prevPick.length===pasteItems.length)pasteItems.forEach((o,i)=>o.pick=prevPick[i]&&!!(o.hang||o.phi));
+  const needShop=pasteItems.some(o=>!o.shopFound);
+  $('#pasteShopBox').hidden=!needShop;
+  if(needShop){const opts=recentShops();if(!opts.includes('Khách gửi lẻ'))opts.push('Khách gửi lẻ');if(pasteShop&&!opts.includes(pasteShop))opts.unshift(pasteShop);
+    $('#pasteShopChips').innerHTML=opts.map(n=>`<button type="button" data-s="${esc(n)}" aria-pressed="${n===pasteShop}">${esc(n)}</button>`).join('')}
   const needPhi=pasteItems.some(o=>!o.phiFromText);
   $('#pastePhiBox').hidden=!needPhi;
   if(needPhi&&!$('#pastePhi').value){const d=shopDef(pasteItems[0]&&pasteItems[0].shop);if(d)$('#pastePhi').value=vndToK(d.phi)}
@@ -899,14 +963,16 @@ function renderPasteList(){
   if(!pasteItems.length){L.innerHTML='';$('#pasteSave').disabled=true;$('#pasteSave').textContent='Thêm đơn';return}
   L.innerHTML=`<div class="sub" style="margin:0">Tìm thấy <b>${pasteItems.length}</b> đơn. Bỏ tích đơn nào sai, bấm vào đơn để sửa sau khi thêm.</div>`+
     pasteItems.map((o,i)=>`<label class="pcard"><input type="checkbox" data-i="${i}" ${o.pick?'checked':''}>
-      <div class="pc-body"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(o.shop||'Chưa rõ shop')}</b><span class="pc-money num">${o.hang?shortMoney(o.hang):'—'}</span></div>
-      <span style="color:var(--muted)">${esc(o.addr||'Chưa rõ địa chỉ')}${o.phone?' · '+esc(o.phone):''}</span>
+      <div class="pc-body"><div style="display:flex;justify-content:space-between;gap:8px">${o.shop?`<span><b>${esc(o.shop)}</b>${o.senderPhone&&!o.shop.includes(o.senderPhone)?` <span style="color:var(--muted);font-size:12px">· ${esc(o.senderPhone)}</span>`:''}</span>`:'<b class="miss" style="font-size:14px">Chưa chọn shop</b>'}<span class="pc-money num">${o.hang?shortMoney(o.hang):'—'}</span></div>
+      <span>${o.ten?'<b>'+esc(o.ten)+'</b> · ':''}${esc(o.addr||'Chưa rõ địa chỉ')}${o.phone?' · '+esc(o.phone):''}</span>
+      ${o.mon?`<span style="color:var(--muted);font-size:12px">Hàng: ${esc(o.mon)}</span>`:''}
+      ${o.canFlip?`<button type="button" class="flip" data-flip="${i}">⇄ Nhầm số người gửi với số khách? Bấm để đổi</button>`:''}
       <span style="color:var(--muted);font-size:12px">Ship ${o.phi?shortMoney(o.phi):'chưa rõ'} · ${o.phiBy==='shop'?'shop trả':'khách trả'}</span>
       ${o.addrMem?'<span style="color:var(--ok);font-size:12px;font-weight:600">Địa chỉ lấy từ lần giao trước</span>':''}
       ${o.ci&&o.ci.bom?`<span class="miss">⚠ ${esc(custLine(o.ci))} Đã bỏ tích, tích lại nếu vẫn nhận.</span>`:(o.ci&&o.ci.giao?`<span style="color:var(--ok);font-size:12px;font-weight:600">${esc(custLine(o.ci))}</span>`:'')}
       ${!o.hang&&!o.phi?'<span class="miss">Không đọc được số tiền</span>':''}</div></label>`).join('');
-  const n=pasteItems.filter(o=>o.pick).length;
-  $('#pasteSave').disabled=!n;$('#pasteSave').textContent=n?`Thêm ${n} đơn`:'Thêm đơn';
+  const n=pasteItems.filter(o=>o.pick).length,noShop=pasteItems.some(o=>o.pick&&!o.shop);
+  $('#pasteSave').disabled=!n||noShop;$('#pasteSave').textContent=noShop?'Chọn shop trước':(n?`Thêm ${n} đơn`:'Thêm đơn');
 }
 function rememberShop(f){
   state.shopDefs=state.shopDefs||{};
@@ -932,8 +998,9 @@ function savePaste(){
   const pick=pasteItems.filter(o=>o.pick);if(!pick.length)return;
   if(state.sample)clearSampleData(true);
   const t=Date.now();
-  pick.forEach((o,i)=>{const f={shop:o.shop||'Shop chưa đặt tên',addr:o.addr||'Chưa ghi địa chỉ',phone:o.phone,hang:o.hang,phi:o.phi,ung:0,phiBy:o.phiBy||'khach',status:'dang',bomFee:true,note:''};
-    state.orders.push(Object.assign({id:newId()+i,date:day,t:t-i},f));rememberShop(f)});
+  pick.forEach((o,i)=>{const f={shop:o.shop||'Shop chưa đặt tên',addr:o.addr||'Chưa ghi địa chỉ',phone:o.phone,hang:o.hang,phi:o.phi,ung:0,phiBy:o.phiBy||'khach',status:'dang',bomFee:true,ten:o.ten||'',note:o.mon||''};
+    state.orders.push(Object.assign({id:newId()+i,date:day,t:t-i},f));rememberShop(f);
+    if(o.senderPhone&&!state.shopPhones[f.shop])state.shopPhones[f.shop]=o.senderPhone.replace(/\s/g,'')});
   save();closeForm();render();toast(`Đã thêm ${pick.length} đơn.`);
 }
 
@@ -965,7 +1032,11 @@ $('#segSt').onclick=e=>{const b=e.target.closest('button');if(!b)return;form.sta
 $('#shopChips').onclick=e=>{const b=e.target.closest('button');if(b)setShop(b.dataset.s)};
 $('#fShop').addEventListener('change',()=>setShop($('#fShop').value.trim()));
 let pt;$('#pasteText').addEventListener('input',()=>{clearTimeout(pt);pt=setTimeout(buildPaste,250)});
+$('#pasteShopChips').onclick=e=>{const b=e.target.closest('button');if(!b)return;pasteShop=b.dataset.s;$('#pasteShopInp').value='';$('#pastePhi').value='';buildPaste()};
+$('#pasteShopInp').addEventListener('input',()=>{pasteShop=$('#pasteShopInp').value.trim();clearTimeout(pt);pt=setTimeout(()=>{$('#pastePhi').value='';buildPaste()},300)});
 $('#pastePhi').addEventListener('input',()=>{clearTimeout(pt);pt=setTimeout(buildPaste,250)});
+$('#pasteList').addEventListener('click',e=>{const f=e.target.closest('[data-flip]');if(!f)return;e.preventDefault();const i=+f.dataset.flip;pasteFlip.has(i)?pasteFlip.delete(i):pasteFlip.add(i);buildPaste()});
+$('#pasteText').addEventListener('input',()=>{pasteFlip=new Set()});
 $('#pasteList').addEventListener('change',e=>{const c=e.target.closest('input[data-i]');if(!c)return;pasteItems[+c.dataset.i].pick=c.checked;renderPasteList()});
 $('#pasteSave').onclick=savePaste;
 $('#saveNext').onclick=()=>saveQuick(true);
@@ -1031,7 +1102,6 @@ render();
   document.getElementById('installClose').onclick=()=>{b.hidden=true;try{localStorage.setItem('soShip.installSkip','1')}catch(e){}};
 })();
 </script>
-
 <script>
 if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
 </script>
