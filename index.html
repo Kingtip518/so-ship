@@ -85,7 +85,10 @@ h2{font-family:var(--display);font-weight:700;font-size:22px;margin:4px 0 0;lett
 .list{display:flex;flex-direction:column;gap:10px}
 .order{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 12px 10px;display:flex;flex-direction:column;gap:8px}
 .o-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.o-shop{font-weight:700;font-size:15px}
+.o-shop{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.callmini{display:inline-flex;align-items:center;gap:4px;text-decoration:none;background:var(--ok);color:#fff;border-radius:999px;padding:3px 10px 3px 8px;font-size:12px;font-weight:700;line-height:1.4}
+.callmini svg{width:13px;height:13px}
+fieldset.grp legend{display:flex;align-items:center;gap:8px}
 .o-addr{color:var(--muted);font-size:14px;min-width:0;overflow-wrap:anywhere}
 .o-money{text-align:right;flex-shrink:0}
 .o-money b{font-family:var(--display);font-size:24px;font-weight:700;display:block;line-height:1}
@@ -166,6 +169,8 @@ textarea.inp{min-height:84px;resize:vertical}
 .shopchips.big button{padding:9px 14px;font-size:14px;font-weight:600;border-radius:12px}
 .shopchips.big button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .bigmoney{font-family:var(--display);font-size:26px;font-weight:700;padding:8px 12px}
+fieldset.grp{border:1px solid var(--line);border-radius:12px;padding:8px 10px 10px;margin:0;display:flex;flex-direction:column;gap:8px;background:var(--surface);min-width:0}
+fieldset.grp legend{font-weight:700;font-size:13px;padding:0 4px}
 .opt{font-weight:400;color:var(--muted);font-size:11px}
 details.more{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 details.more summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
@@ -240,7 +245,7 @@ h3.mini{margin:0;font-size:15px}
       </div>
     </div>
     <div class="kpis">
-      <div class="kpi"><small>Phải chuyển lại các shop</small><b class="num hl" id="kTra">0</b><em id="kTraSub"></em></div>
+      <div class="kpi"><small>Phải chuyển lại nơi gửi</small><b class="num hl" id="kTra">0</b><em id="kTraSub"></em></div>
       <div class="kpi"><small>Thu nhập phí ship</small><b class="num" id="kThu">0</b><em id="kThuSub"></em></div>
     </div>
   </div>
@@ -252,7 +257,7 @@ h3.mini{margin:0;font-size:15px}
     <span style="display:flex;gap:6px"><button id="installBtn">Cài ngay</button><button id="installClose" style="background:none;color:var(--ink);border:1px solid var(--line)">Để sau</button></span>
   </div>
   <div class="banner" id="sampleBanner" hidden>
-    <span>Đang xem <b>dữ liệu mẫu</b> (Shop Hoa Mai, Tiệm Bánh Nhà Bơ… là shop giả). Đơn thật đầu tiên bạn lưu sẽ tự xóa hết dữ liệu mẫu.</span>
+    <span>Đang xem <b>dữ liệu mẫu</b> (Shop Hoa Mai, Tiệm Bánh Nhà Bơ… là nơi gửi giả). Đơn thật đầu tiên bạn lưu sẽ tự xóa hết dữ liệu mẫu.</span>
     <button id="clearSample">Xóa dữ liệu mẫu</button>
   </div>
 
@@ -266,7 +271,7 @@ h3.mini{margin:0;font-size:15px}
 
   <section id="v-doisoat" hidden>
     <div class="wrap">
-      <h2>Đối soát với từng shop</h2>
+      <h2>Đối soát với từng nơi gửi</h2>
       <p class="sub">Đơn còn đang giao hoặc hẹn lại chưa được tính vào số tiền.</p>
       <div class="list" id="settleList"></div>
     </div>
@@ -292,13 +297,13 @@ h3.mini{margin:0;font-size:15px}
       </div>
 
       <div class="panel">
-        <h3 class="mini">Theo từng shop</h3>
+        <h3 class="mini">Theo từng nơi gửi</h3>
         <div class="tbl-wrap"><table id="shopTbl"></table></div>
       </div>
 
       <div class="panel">
         <h3 class="mini">Xuất file kỳ này</h3>
-        <span class="hint" style="font-size:12px;color:var(--muted)">File Excel có 2 trang: chi tiết từng đơn và tổng hợp theo shop. Dùng để lưu sổ, gửi shop hoặc tính lương.</span>
+        <span class="hint" style="font-size:12px;color:var(--muted)">File Excel có 2 trang: chi tiết từng đơn và tổng hợp theo nơi gửi. Dùng để lưu sổ, gửi cho nơi gửi hoặc tính thu nhập.</span>
         <div class="s-btns" style="padding:0">
           <button class="btn pri grow" id="xlsxBtn">Tải file Excel</button>
           <button class="btn sec grow" id="tsvBtn">Sao chép bảng</button>
@@ -363,9 +368,8 @@ h3.mini{margin:0;font-size:15px}
       <textarea class="inp" id="pasteText" style="min-height:130px" placeholder="Dán tin đơn vào đây, 1 đơn hay nhiều đơn đều được.&#10;&#10;Ví dụ:&#10;Shop Hoa Mai gửi:&#10;1. 22 Hạ Long, 0912345678, thu 350k&#10;2. Giếng Đáy, 0988111222, thu 520k"></textarea>
       <span class="hint" style="font-size:12px;color:var(--muted)">Có thể bấm nút micro trên bàn phím điện thoại để đọc đơn thay vì gõ.</span>
       <div class="field" id="pasteShopBox" hidden>
-        <label>Tin không ghi shop. Đơn này của shop nào?</label>
-        <div class="shopchips big" id="pasteShopChips"></div>
-        <input class="inp" id="pasteShopInp" list="shopList" placeholder="Hoặc gõ tên shop / người gửi" autocomplete="off">
+        <label for="pasteShopInp">Nơi gửi cho đơn tin không ghi <span class="opt">không bắt buộc</span></label>
+        <input class="inp" id="pasteShopInp" list="shopList" placeholder="Tên người / shop gửi" autocomplete="off">
       </div>
       <div class="field" id="pastePhiBox" hidden>
         <label for="pastePhi">Phí ship cho đơn tin không ghi phí</label>
@@ -376,12 +380,24 @@ h3.mini{margin:0;font-size:15px}
 
     <!-- Chế độ nhập tay -->
     <div id="quickMode" class="wrap" style="gap:12px">
-      <div class="field">
-        <label>Shop</label>
-        <div class="shopchips big" id="shopChips"></div>
-        <input class="inp" id="fShop" list="shopList" placeholder="Hoặc gõ tên shop mới" autocomplete="off">
+      <fieldset class="grp">
+        <legend>Nơi gửi <a class="callmini" id="callSender" href="#" hidden>Gọi nơi gửi</a></legend>
+        <div class="grid2">
+          <input class="inp" id="fShop" list="shopList" placeholder="Tên người / shop gửi" autocomplete="off" aria-label="Tên nơi gửi">
+          <input class="inp num" id="fShopPhone" inputmode="tel" placeholder="SĐT nơi gửi" aria-label="Số điện thoại nơi gửi">
+        </div>
         <datalist id="shopList"></datalist>
-      </div>
+        <div class="shopchips" id="shopChips"></div>
+      </fieldset>
+      <fieldset class="grp">
+        <legend>Nơi nhận</legend>
+        <div class="grid2">
+          <input class="inp" id="fTen" placeholder="Tên khách" autocomplete="off" aria-label="Tên khách nhận">
+          <input class="inp num" id="fPhone" inputmode="tel" placeholder="SĐT khách" aria-label="Số điện thoại khách">
+        </div>
+        <input class="inp" id="fAddr" placeholder="Địa chỉ giao" aria-label="Địa chỉ giao">
+        <div class="alert" id="bomWarn" hidden></div>
+      </fieldset>
       <div class="grid2">
         <div class="field">
           <label for="fHang">Tiền thu hộ</label>
@@ -396,25 +412,14 @@ h3.mini{margin:0;font-size:15px}
       </div>
       <div class="seg" id="segPhi">
         <button type="button" data-v="khach" aria-pressed="true">Khách trả ship</button>
-        <button type="button" data-v="shop" aria-pressed="false">Shop trả ship</button>
+        <button type="button" data-v="shop" aria-pressed="false">Nơi gửi trả ship</button>
       </div>
-      <div class="grid2">
-        <div class="field">
-          <label for="fAddr">Địa chỉ <span class="opt">không bắt buộc</span></label>
-          <input class="inp" id="fAddr" placeholder="22 Hạ Long">
-        </div>
-        <div class="field">
-          <label for="fPhone">SĐT khách <span class="opt">không bắt buộc</span></label>
-          <input class="inp num" id="fPhone" inputmode="tel" placeholder="09…">
-        </div>
-      </div>
-      <div class="alert" id="bomWarn" hidden></div>
 
       <details class="more" id="more">
-        <summary>Thêm chi tiết (ứng tiền, ghi chú, số shop…)</summary>
+        <summary>Thêm chi tiết (ứng tiền, ghi chú, trạng thái…)</summary>
         <div class="wrap" style="gap:12px;padding-top:10px">
           <div class="field">
-            <label for="fUng">Đã ứng trước tiền hàng cho shop</label>
+            <label for="fUng">Đã ứng trước tiền hàng cho nơi gửi</label>
             <input class="inp num" id="fUng" inputmode="numeric" placeholder="để trống nếu không ứng">
             <span class="hint" id="hUng">nghìn đồng</span>
           </div>
@@ -427,14 +432,10 @@ h3.mini{margin:0;font-size:15px}
               <button type="button" data-v="hen" aria-pressed="false">Hẹn lại</button>
             </div>
           </div>
-          <label class="check"><input type="checkbox" id="fBomFee" checked> Nếu khách bom, shop vẫn trả phí ship lượt đi</label>
+          <label class="check"><input type="checkbox" id="fBomFee" checked> Nếu khách bom, nơi gửi vẫn trả phí ship lượt đi</label>
           <div class="field">
             <label for="fNote">Ghi chú</label>
             <input class="inp" id="fNote" placeholder="Ví dụ: gọi trước 15 phút">
-          </div>
-          <div class="field">
-            <label for="fShopPhone">Số điện thoại shop</label>
-            <input class="inp num" id="fShopPhone" inputmode="tel" placeholder="Nhập một lần, lần sau tự điền">
           </div>
         </div>
       </details>
@@ -560,9 +561,9 @@ function renderOrders(os){
   if(!os.length){
     if(!state.orders.length){L.innerHTML=`<div class="empty" style="text-align:left;display:flex;flex-direction:column;gap:10px">
       <b style="color:var(--ink);font-size:16px">Sổ đang trống, bắt đầu ghi đơn nhé</b>
-      <span>1. Bấm <b>+ Thêm đơn</b>, chọn shop, gõ số tiền, bấm Lưu.</span>
+      <span>1. Bấm <b>+ Thêm đơn</b>, ghi nơi gửi, nơi nhận, số tiền, bấm Lưu.</span>
       <span>2. Hoặc chép tin đơn trong nhóm Zalo, chọn <b>Dán tin Zalo</b>, sổ tự tách đơn.</span>
-      <span>3. Cuối ngày vào <b>Đối soát</b>, bấm sao chép rồi gửi Zalo cho shop.</span>
+      <span>3. Cuối ngày vào <b>Đối soát</b>, bấm sao chép rồi gửi Zalo cho nơi gửi.</span>
       <button type="button" class="btn sec" id="loadSample">Xem thử với dữ liệu mẫu</button></div>`;return}
     L.innerHTML='<div class="empty">Chưa có đơn nào trong ngày này.<br>Bấm <b>+ Thêm đơn</b> ở góc dưới để ghi đơn đầu tiên.</div>';return}
   const pend=os.filter(o=>o.status==='dang');
@@ -572,12 +573,12 @@ function renderOrders(os){
     const thuKhach=o.hang+(o.phiBy==='khach'?o.phi:0);
     return `<article class="order" data-id="${o.id}">
       <div class="o-top">
-        <div style="min-width:0"><div class="o-shop">${esc(o.shop)}</div><div class="o-addr">${o.ten?'<b style="color:var(--ink)">'+esc(o.ten)+'</b> · ':''}${esc(o.addr)}${o.phone?' · '+esc(o.phone):''}</div>${o.note?`<div class="o-addr">Ghi chú: ${esc(o.note)}</div>`:''}</div>
+        <div style="min-width:0"><div class="o-shop"><span>${esc(o.shop)}</span>${(()=>{const sp=normPhone(state.shopPhones[o.shop]||'');return sp?`<a class="callmini" href="tel:${sp}" aria-label="Gọi nơi gửi ${esc(o.shop)}">${IC.call}Gọi nơi gửi</a>`:''})()}</div><div class="o-addr">${o.ten?'<b style="color:var(--ink)">'+esc(o.ten)+'</b> · ':''}${esc(o.addr)}${o.phone?' · '+esc(o.phone):''}</div>${o.note?`<div class="o-addr">Ghi chú: ${esc(o.note)}</div>`:''}</div>
         <div class="o-money"><b class="num">${shortMoney(thuKhach)}</b><small>thu của khách</small></div>
       </div>
       <div class="chips">
         <span class="chip st-${o.status}">${ST[o.status]}</span>
-        <span class="chip plain num">${o.phi?`Ship ${shortMoney(o.phi)} · ${o.phiBy==='khach'?'khách trả':'shop trả'}`:'Chưa có phí ship'}</span>
+        <span class="chip plain num">${o.phi?`Ship ${shortMoney(o.phi)} · ${o.phiBy==='khach'?'khách trả':'nơi gửi trả'}`:'Chưa có phí ship'}</span>
         ${o.ung?`<span class="chip plain num">Đã ứng ${shortMoney(o.ung)}</span>`:''}
         ${b?`<span class="chip warn">Số này từng bom ${b} lần</span>`:(()=>{const ci=custInfo(o.phone,o.id);return ci&&ci.giao>=2?`<span class="chip st-giao">Khách quen ${ci.giao} lần</span>`:''})()}
       </div>
@@ -609,10 +610,10 @@ function settleText(r){
   lines.push(`ĐỐI SOÁT NGÀY ${fmtD(day)} – ${r.shop}`);
   lines.push(`Đã giao ${r.giao} đơn${r.bom?`, khách bom ${r.bom} đơn`:''}`);
   lines.push(`• Tiền hàng thu hộ: ${money(r.hang)}`);
-  if(r.phiTru)lines.push(`• Trừ phí ship shop trả: ${money(r.phiTru)}`);
+  if(r.phiTru)lines.push(`• Trừ phí ship do bên gửi trả: ${money(r.phiTru)}`);
   if(r.ung)lines.push(`• Trừ tiền đã ứng trước: ${money(r.ung)}`);
   if(r.phiBom)lines.push(`• Trừ phí ship đơn bom: ${money(r.phiBom)}`);
-  lines.push(r.tra>=0?`=> CHUYỂN LẠI SHOP: ${money(r.tra)}`:`=> SHOP CẦN TRẢ SHIPPER: ${money(-r.tra)}`);
+  lines.push(r.tra>=0?`=> SHIPPER CHUYỂN LẠI: ${money(r.tra)}`:`=> BÊN GỬI CẦN TRẢ SHIPPER: ${money(-r.tra)}`);
   lines.push('');lines.push('Chi tiết:');
   let i=1;r.list.forEach(o=>{if(o.status==='giao'||o.status==='bom')lines.push(`${i++}. ${o.ten?o.ten+', ':''}${o.addr} – ${money(o.hang)} – ${ST[o.status]}`)});
   if(r.pend)lines.push(`(Còn ${r.pend} đơn đang giao/hẹn lại, chưa tính)`);
@@ -629,17 +630,17 @@ function renderSettle(os){
       <div class="s-rows">
         ${row('Đơn đã giao / khách bom',r.giao+' / '+r.bom)}
         ${row('Tiền hàng thu hộ',money(r.hang))}
-        ${r.phiTru?row('Trừ phí ship shop trả','−'+money(r.phiTru)):''}
+        ${r.phiTru?row('Trừ phí ship nơi gửi trả','−'+money(r.phiTru)):''}
         ${r.ung?row('Trừ tiền đã ứng trước','−'+money(r.ung)):''}
         ${r.phiBom?row('Trừ phí ship đơn bom','−'+money(r.phiBom)):''}
         ${r.pend?row('Chưa tính (đang giao, hẹn lại)',r.pend+' đơn'):''}
       </div>
-      <div class="s-total"><span>${r.tra>=0?'Chuyển lại shop':'Shop cần trả bạn'}</span><b class="num ${r.tra<0?'neg':''}">${money(Math.abs(r.tra))}</b></div>
+      <div class="s-total"><span>${r.tra>=0?'Chuyển lại nơi gửi':'Nơi gửi cần trả bạn'}</span><b class="num ${r.tra<0?'neg':''}">${money(Math.abs(r.tra))}</b></div>
       <div class="s-btns">
-        <button class="btn pri grow" data-a="copy">Sao chép tin gửi shop</button>
+        <button class="btn pri grow" data-a="copy">Sao chép tin đối soát</button>
         <button class="btn sec" data-a="done">${done?'Bỏ đánh dấu':'Đã chuyển'}</button>
       </div>
-      ${state.shopPhones[r.shop]?`<div style="padding:0 12px 12px">${contactRow(state.shopPhones[r.shop],'','shop')}</div>`:''}
+      ${state.shopPhones[r.shop]?`<div style="padding:0 12px 12px">${contactRow(state.shopPhones[r.shop],'','nơi gửi')}</div>`:''}
       <div class="s-copy" hidden></div>
     </article>`}).join('');
   L._rs=rs;
@@ -682,7 +683,7 @@ function renderIncome(){
   const worked=nDays.filter(d=>os.some(o=>o.date===d&&calc(o).done)).length;
   const st=(a,b)=>`<div class="stat"><small>${a}</small><b class="num">${b}</b></div>`;
   $('#statGrid').innerHTML=st('Thu nhập phí ship',shortMoney(lai))+st('Đơn đã giao',giao)+st('Khách bom',bom+(giao+bom?` · ${Math.round(bom*100/(giao+bom))}%`:''))
-    +st('Tiền đã thu của khách',shortMoney(thu))+st('Phải chuyển shop',shortMoney(tra))+st(per==='ngay'?'Đơn chưa xong':'TB mỗi ngày làm',per==='ngay'?pend:(worked?shortMoney(lai/worked):'0'));
+    +st('Tiền đã thu của khách',shortMoney(thu))+st('Phải chuyển nơi gửi',shortMoney(tra))+st(per==='ngay'?'Đơn chưa xong':'TB mỗi ngày làm',per==='ngay'?pend:(worked?shortMoney(lai/worked):'0'));
 
   // Biểu đồ theo ngày trong kỳ
   const chart=$('#chart');
@@ -716,7 +717,7 @@ function renderIncome(){
   else{const T={giao:0,bom:0,hang:0,lai:0,tra:0};
     const rows=rs.map(r=>{const l=r.list.reduce((a,o)=>a+calc(o).lai,0);T.giao+=r.giao;T.bom+=r.bom;T.hang+=r.hang;T.lai+=l;T.tra+=r.tra;
       return`<tr><td>${esc(r.shop)}</td><td class="num">${r.giao}</td><td class="num">${r.bom}</td><td class="num">${money(r.hang)}</td><td class="num">${money(l)}</td><td class="num">${money(r.tra)}</td></tr>`}).join('');
-    $('#shopTbl').innerHTML=`<thead><tr><th>Shop</th><th>Giao</th><th>Bom</th><th>Tiền thu hộ</th><th>Phí ship</th><th>Chuyển lại</th></tr></thead><tbody>${rows}</tbody>
+    $('#shopTbl').innerHTML=`<thead><tr><th>Nơi gửi</th><th>Giao</th><th>Bom</th><th>Tiền thu hộ</th><th>Phí ship</th><th>Chuyển lại</th></tr></thead><tbody>${rows}</tbody>
       <tfoot><tr><td>Tổng</td><td class="num">${T.giao}</td><td class="num">${T.bom}</td><td class="num">${money(T.hang)}</td><td class="num">${money(T.lai)}</td><td class="num">${money(T.tra)}</td></tr></tfoot>`}
 
   // Số hay bom (toàn bộ sổ)
@@ -730,10 +731,10 @@ function renderIncome(){
 /* ===== Xuất file ===== */
 function exportRows(){
   const os=state.orders.filter(inRange).sort((a,b)=>a.date.localeCompare(b.date)||a.t-b.t);
-  const head=['Ngày','Shop','Địa chỉ giao','SĐT khách','Trạng thái','Tiền hàng thu hộ','Phí ship','Phí ship do ai trả','Đã ứng trước','Thu của khách','Chuyển lại shop','Thu nhập','Ghi chú'];
-  const rows=os.map(o=>{const c=calc(o);return[fmtD(o.date),o.shop,o.addr,o.phone,ST[o.status],o.hang,o.phi,o.phiBy==='khach'?'Khách trả':'Shop trả',o.ung,c.thu,c.tra,c.lai,o.note]});
+  const head=['Ngày','Nơi gửi','SĐT nơi gửi','Tên khách','Địa chỉ giao','SĐT khách','Trạng thái','Tiền hàng thu hộ','Phí ship','Phí ship do ai trả','Đã ứng trước','Thu của khách','Chuyển lại nơi gửi','Thu nhập','Ghi chú'];
+  const rows=os.map(o=>{const c=calc(o);return[fmtD(o.date),o.shop,state.shopPhones[o.shop]||'',o.ten||'',o.addr,o.phone,ST[o.status],o.hang,o.phi,o.phiBy==='khach'?'Khách trả':'Nơi gửi trả',o.ung,c.thu,c.tra,c.lai,o.note]});
   const sh=shopSum(os).map(r=>[r.shop,r.giao,r.bom,r.pend,r.hang,r.phiTru,r.ung,r.phiBom,r.list.reduce((a,o)=>a+calc(o).lai,0),r.tra]);
-  const shHead=['Shop','Đơn đã giao','Đơn bom','Đơn chưa xong','Tiền hàng thu hộ','Trừ phí ship shop trả','Trừ tiền đã ứng','Trừ phí đơn bom','Thu nhập phí ship','Chuyển lại shop'];
+  const shHead=['Nơi gửi','Đơn đã giao','Đơn bom','Đơn chưa xong','Tiền hàng thu hộ','Trừ phí ship nơi gửi trả','Trừ tiền đã ứng','Trừ phí đơn bom','Thu nhập phí ship','Chuyển lại nơi gửi'];
   if(sh.length){const sum=i=>sh.reduce((a,r)=>a+r[i],0);sh.push(['TỔNG CỘNG',sum(1),sum(2),sum(3),sum(4),sum(5),sum(6),sum(7),sum(8),sum(9)])}
   return{head,rows,shHead,sh,count:os.length};
 }
@@ -744,11 +745,11 @@ function exportXlsx(){
   {
     try{const wb=XLSX.utils.book_new();
       const ws1=XLSX.utils.aoa_to_sheet([title,[],d.head,...d.rows]);
-      ws1['!cols']=[10,18,30,13,11,14,10,14,12,14,14,11,20].map(w=>({wch:w}));
+      ws1['!cols']=[10,18,13,14,30,13,11,14,10,14,12,14,14,11,20].map(w=>({wch:w}));
       const ws2=XLSX.utils.aoa_to_sheet([title,[],d.shHead,...d.sh]);
       ws2['!cols']=[20,11,9,13,16,18,15,15,16,16].map(w=>({wch:w}));
       [ws1,ws2].forEach(ws=>{const r=XLSX.utils.decode_range(ws['!ref']);for(let R=3;R<=r.e.r;R++)for(let C=0;C<=r.e.c;C++){const c=ws[XLSX.utils.encode_cell({r:R,c:C})];if(c&&c.t==='n')c.z='#,##0'}});
-      XLSX.utils.book_append_sheet(wb,ws1,'Chi tiết đơn');XLSX.utils.book_append_sheet(wb,ws2,'Tổng hợp theo shop');
+      XLSX.utils.book_append_sheet(wb,ws1,'Chi tiết đơn');XLSX.utils.book_append_sheet(wb,ws2,'Tổng hợp theo nơi gửi');
       const name=periodFileName()+'.xlsx';
       if(DL){const buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});
         DL.save({filename:name,data:new Blob([buf])}).then(()=>toast('Đã lưu file '+name),err=>{
@@ -773,17 +774,17 @@ function kToVnd(s){s=String(s||'').trim().replace(/\s/g,'');if(!s)return 0;
 function vndToK(n){if(!n)return'';const k=n/1000;return Number.isInteger(k)?String(k):String(k).replace('.',',')}
 function setSeg(id,v){document.querySelectorAll('#'+id+' button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===v)))}
 function shopsList(){const s=new Set(state.shops||[]);state.orders.forEach(o=>s.add(o.shop));return[...s].filter(Boolean)}
-function recentShops(){const seen=[];state.orders.slice().sort((a,b)=>b.t-a.t).forEach(o=>{if(o.shop&&!seen.includes(o.shop))seen.push(o.shop)});return seen.slice(0,5)}
+function recentShops(){const seen=[];state.orders.slice().sort((a,b)=>b.t-a.t).forEach(o=>{if(o.shop&&o.shop!=='Chưa ghi nơi gửi'&&!seen.includes(o.shop))seen.push(o.shop)});return seen.slice(0,5)}
 
 let mode='nhanh',pasteItems=[],pasteShop='',pasteFlip=new Set();
 const shopDef=n=>(state.shopDefs||{})[n]||null;
-function setShop(n){
-  $('#fShop').value=n;
+function setShop(n,fromPhone){
+  if(!fromPhone)$('#fShop').value=n;
   document.querySelectorAll('#shopChips button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.s===n)));
   if(editId)return;
   const d=shopDef(n);
   if(d){$('#fPhi').value=vndToK(d.phi);form.phiBy=d.phiBy;setSeg('segPhi',form.phiBy)}
-  $('#fShopPhone').value=state.shopPhones[n]||'';
+  if(!fromPhone)$('#fShopPhone').value=state.shopPhones[n]||'';
   updatePreview();
 }
 function setMode(m){mode=m;
@@ -793,7 +794,7 @@ function setMode(m){mode=m;
   setTimeout(()=>{try{(m==='dan'?$('#pasteText'):$('#fHang')).focus({preventScroll:true})}catch(e){}},60);
 }
 function clearOrderFields(){
-  ['fAddr','fPhone','fHang','fUng','fNote'].forEach(id=>$('#'+id).value='');
+  ['fTen','fAddr','fPhone','fHang','fUng','fNote'].forEach(id=>$('#'+id).value='');
   form.status='dang';setSeg('segSt','dang');$('#fBomFee').checked=true;
 }
 function openForm(o){
@@ -804,11 +805,11 @@ function openForm(o){
   $('#footQuick').style.gridTemplateColumns=o?'1fr 2fr':'';
   $('#pasteText').value='';$('#pastePhi').value='';pasteShop='';pasteFlip=new Set();$('#pasteShopInp').value='';$('#pasteShopBox').hidden=true;$('#pastePhiBox').hidden=true;pasteItems=[];renderPasteList();
   $('#shopList').innerHTML=shopsList().map(s=>`<option value="${esc(s)}">`).join('');
-  $('#shopChips').innerHTML=[...recentShops(),...(recentShops().includes('Khách gửi lẻ')?[]:['Khách gửi lẻ'])].map(s=>`<button type="button" data-s="${esc(s)}" aria-pressed="false">${esc(s)}</button>`).join('');
+  $('#shopChips').innerHTML=recentShops().filter(n=>n!=='Chưa ghi nơi gửi').map(s=>`<button type="button" data-s="${esc(s)}" aria-pressed="false">${esc(s)}</button>`).join('');
   clearOrderFields();$('#fPhi').value='';form.phiBy='khach';setSeg('segPhi','khach');
   $('#more').open=false;
   if(o){
-    $('#fShop').value=o.shop;$('#fAddr').value=o.addr==='Chưa ghi địa chỉ'?'':o.addr;$('#fPhone').value=o.phone;
+    $('#fShop').value=o.shop==='Chưa ghi nơi gửi'?'':o.shop;$('#fTen').value=o.ten||'';$('#fAddr').value=o.addr==='Chưa ghi địa chỉ'?'':o.addr;$('#fPhone').value=o.phone;
     $('#fHang').value=vndToK(o.hang);$('#fPhi').value=vndToK(o.phi);$('#fUng').value=vndToK(o.ung);
     $('#fNote').value=o.note;$('#fBomFee').checked=o.bomFee;$('#fShopPhone').value=state.shopPhones[o.shop]||'';
     form.phiBy=o.phiBy;form.status=o.status;setSeg('segPhi',o.phiBy);setSeg('segSt',o.status);
@@ -820,9 +821,12 @@ function openForm(o){
 }
 function closeForm(){$('#sheetBg').hidden=true;editId=null}
 
-function readForm(){return{shop:$('#fShop').value.trim()||'Shop chưa đặt tên',addr:$('#fAddr').value.trim()||'Chưa ghi địa chỉ',phone:$('#fPhone').value.trim(),
+function readForm(){return{shop:$('#fShop').value.trim()||'Chưa ghi nơi gửi',ten:$('#fTen').value.trim(),addr:$('#fAddr').value.trim()||'Chưa ghi địa chỉ',phone:$('#fPhone').value.trim(),
   hang:kToVnd($('#fHang').value),phi:kToVnd($('#fPhi').value),ung:kToVnd($('#fUng').value),phiBy:form.phiBy,status:form.status,bomFee:$('#fBomFee').checked,note:$('#fNote').value.trim()}}
+function updateSenderCall(){const p=normPhone($('#fShopPhone').value),a=$('#callSender');
+  if(p.length>=9){a.href='tel:'+p;a.innerHTML=IC.call+'Gọi nơi gửi';a.hidden=false}else a.hidden=true}
 function updatePreview(){
+  updateSenderCall();
   const f=readForm();
   $('#hHang').textContent=f.hang?'= '+money(f.hang):'nghìn đồng';
   $('#hPhi').textContent=f.phi?'= '+money(f.phi):'nghìn đồng';
@@ -831,7 +835,7 @@ function updatePreview(){
   w.hidden=!line;w.textContent=line;w.classList.toggle('good',!!ci&&!ci.bom);
   const thu=f.hang+(f.phiBy==='khach'?f.phi:0),tra=f.hang-(f.phiBy==='shop'?f.phi:0)-f.ung;
   $('#preview').innerHTML=`<div class="s-row"><span style="color:var(--muted)">Thu của khách</span><b class="num">${money(thu)}</b></div>
-    <div class="s-row"><span style="color:var(--muted)">Chuyển lại shop</span><b class="num">${money(tra)}</b></div>`;
+    <div class="s-row"><span style="color:var(--muted)">Chuyển lại nơi gửi</span><b class="num">${money(tra)}</b></div>`;
 }
 
 /* ===== Đọc tin nhắn ===== */
@@ -958,8 +962,6 @@ function buildPaste(){
   if(prevPick.length===pasteItems.length)pasteItems.forEach((o,i)=>o.pick=prevPick[i]&&!!(o.hang||o.phi));
   const needShop=pasteItems.some(o=>!o.shopFound);
   $('#pasteShopBox').hidden=!needShop;
-  if(needShop){const opts=recentShops();if(!opts.includes('Khách gửi lẻ'))opts.push('Khách gửi lẻ');if(pasteShop&&!opts.includes(pasteShop))opts.unshift(pasteShop);
-    $('#pasteShopChips').innerHTML=opts.map(n=>`<button type="button" data-s="${esc(n)}" aria-pressed="${n===pasteShop}">${esc(n)}</button>`).join('')}
   const needPhi=pasteItems.some(o=>!o.phiFromText);
   $('#pastePhiBox').hidden=!needPhi;
   if(needPhi&&!$('#pastePhi').value){const d=shopDef(pasteItems[0]&&pasteItems[0].shop);if(d)$('#pastePhi').value=vndToK(d.phi)}
@@ -970,16 +972,16 @@ function renderPasteList(){
   if(!pasteItems.length){L.innerHTML='';$('#pasteSave').disabled=true;$('#pasteSave').textContent='Thêm đơn';return}
   L.innerHTML=`<div class="sub" style="margin:0">Tìm thấy <b>${pasteItems.length}</b> đơn. Bỏ tích đơn nào sai, bấm vào đơn để sửa sau khi thêm.</div>`+
     pasteItems.map((o,i)=>`<label class="pcard"><input type="checkbox" data-i="${i}" ${o.pick?'checked':''}>
-      <div class="pc-body"><div style="display:flex;justify-content:space-between;gap:8px">${o.shop?`<span><b>${esc(o.shop)}</b>${o.senderPhone&&!o.shop.includes(o.senderPhone)?` <span style="color:var(--muted);font-size:12px">· ${esc(o.senderPhone)}</span>`:''}</span>`:'<b class="miss" style="font-size:14px">Chưa chọn shop</b>'}<span class="pc-money num">${o.hang?shortMoney(o.hang):'—'}</span></div>
+      <div class="pc-body"><div style="display:flex;justify-content:space-between;gap:8px">${o.shop?`<span><b>${esc(o.shop)}</b>${o.senderPhone&&!o.shop.includes(o.senderPhone)?` <span style="color:var(--muted);font-size:12px">· ${esc(o.senderPhone)}</span>`:''}</span>`:'<b style="color:var(--muted);font-size:14px">Chưa ghi nơi gửi</b>'}<span class="pc-money num">${o.hang?shortMoney(o.hang):'—'}</span></div>
       <span>${o.ten?'<b>'+esc(o.ten)+'</b> · ':''}${esc(o.addr||'Chưa rõ địa chỉ')}${o.phone?' · '+esc(o.phone):''}</span>
       ${o.mon?`<span style="color:var(--muted);font-size:12px">Hàng: ${esc(o.mon)}</span>`:''}
       ${o.canFlip?`<button type="button" class="flip" data-flip="${i}">⇄ Nhầm số người gửi với số khách? Bấm để đổi</button>`:''}
-      <span style="color:var(--muted);font-size:12px">Ship ${o.phi?shortMoney(o.phi):'chưa rõ'} · ${o.phiBy==='shop'?'shop trả':'khách trả'}</span>
+      <span style="color:var(--muted);font-size:12px">Ship ${o.phi?shortMoney(o.phi):'chưa rõ'} · ${o.phiBy==='shop'?'nơi gửi trả':'khách trả'}</span>
       ${o.addrMem?'<span style="color:var(--ok);font-size:12px;font-weight:600">Địa chỉ lấy từ lần giao trước</span>':''}
       ${o.ci&&o.ci.bom?`<span class="miss">⚠ ${esc(custLine(o.ci))} Đã bỏ tích, tích lại nếu vẫn nhận.</span>`:(o.ci&&o.ci.giao?`<span style="color:var(--ok);font-size:12px;font-weight:600">${esc(custLine(o.ci))}</span>`:'')}
       ${!o.hang&&!o.phi?'<span class="miss">Không đọc được số tiền</span>':''}</div></label>`).join('');
-  const n=pasteItems.filter(o=>o.pick).length,noShop=pasteItems.some(o=>o.pick&&!o.shop);
-  $('#pasteSave').disabled=!n||noShop;$('#pasteSave').textContent=noShop?'Chọn shop trước':(n?`Thêm ${n} đơn`:'Thêm đơn');
+  const n=pasteItems.filter(o=>o.pick).length;
+  $('#pasteSave').disabled=!n;$('#pasteSave').textContent=n?`Thêm ${n} đơn`:'Thêm đơn';
 }
 function rememberShop(f){
   state.shopDefs=state.shopDefs||{};
@@ -989,14 +991,13 @@ function rememberShop(f){
 function newId(){return'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function saveQuick(andNext){
   const f=readForm();
-  if(!$('#fShop').value.trim()){toast('Chọn shop trước (hoặc chọn “Khách gửi lẻ”).');try{$('#fShop').focus()}catch(e){}return}
   if(!f.hang&&!f.phi){toast('Nhập tiền thu hộ hoặc phí ship.');try{$('#fHang').focus()}catch(e){}return}
   if(state.sample)clearSampleData(true);
   const wasEdit=!!editId;
   if(editId){const o=state.orders.find(x=>x.id===editId);Object.assign(o,f)}
   else state.orders.push(Object.assign({id:newId(),date:day,t:Date.now()},f));
   rememberShop(f);
-  const sp=$('#fShopPhone').value.trim();if(sp)state.shopPhones[f.shop]=sp;
+  const sp=$('#fShopPhone').value.trim();if(sp&&f.shop!=='Chưa ghi nơi gửi')state.shopPhones[f.shop]=sp;
   save();render();
   if(andNext){clearOrderFields();$('#more').open=false;updatePreview();
     const n=dayOrders(day).length;toast(`Đã lưu. Hôm nay ${n} đơn. Nhập đơn tiếp.`);try{$('#fHang').focus()}catch(e){}return}
@@ -1006,9 +1007,9 @@ function savePaste(){
   const pick=pasteItems.filter(o=>o.pick);if(!pick.length)return;
   if(state.sample)clearSampleData(true);
   const t=Date.now();
-  pick.forEach((o,i)=>{const f={shop:o.shop||'Shop chưa đặt tên',addr:o.addr||'Chưa ghi địa chỉ',phone:o.phone,hang:o.hang,phi:o.phi,ung:0,phiBy:o.phiBy||'khach',status:'dang',bomFee:true,ten:o.ten||'',note:o.mon||''};
+  pick.forEach((o,i)=>{const f={shop:o.shop||'Chưa ghi nơi gửi',addr:o.addr||'Chưa ghi địa chỉ',phone:o.phone,hang:o.hang,phi:o.phi,ung:0,phiBy:o.phiBy||'khach',status:'dang',bomFee:true,ten:o.ten||'',note:o.mon||''};
     state.orders.push(Object.assign({id:newId()+i,date:day,t:t-i},f));rememberShop(f);
-    if(o.senderPhone&&!state.shopPhones[f.shop])state.shopPhones[f.shop]=o.senderPhone.replace(/\s/g,'')});
+    if(o.senderPhone&&f.shop!=='Chưa ghi nơi gửi'&&!state.shopPhones[f.shop])state.shopPhones[f.shop]=o.senderPhone.replace(/\s/g,'')});
   save();closeForm();render();toast(`Đã thêm ${pick.length} đơn.`);
 }
 
@@ -1039,8 +1040,9 @@ $('#segPhi').onclick=e=>{const b=e.target.closest('button');if(!b)return;form.ph
 $('#segSt').onclick=e=>{const b=e.target.closest('button');if(!b)return;form.status=b.dataset.v;setSeg('segSt',form.status)};
 $('#shopChips').onclick=e=>{const b=e.target.closest('button');if(b)setShop(b.dataset.s)};
 $('#fShop').addEventListener('change',()=>setShop($('#fShop').value.trim()));
+$('#fShopPhone').addEventListener('input',()=>{const k=shopByPhone($('#fShopPhone').value);if(k&&!$('#fShop').value.trim()){$('#fShop').value=k;setShop(k,true)}});
+$('#fShop').addEventListener('input',()=>{const k=shopsList().find(x=>x.toLowerCase()===$('#fShop').value.trim().toLowerCase());if(k)setShop(k)});
 let pt;$('#pasteText').addEventListener('input',()=>{clearTimeout(pt);pt=setTimeout(buildPaste,250)});
-$('#pasteShopChips').onclick=e=>{const b=e.target.closest('button');if(!b)return;pasteShop=b.dataset.s;$('#pasteShopInp').value='';$('#pastePhi').value='';buildPaste()};
 $('#pasteShopInp').addEventListener('input',()=>{pasteShop=$('#pasteShopInp').value.trim();clearTimeout(pt);pt=setTimeout(()=>{$('#pastePhi').value='';buildPaste()},300)});
 $('#pastePhi').addEventListener('input',()=>{clearTimeout(pt);pt=setTimeout(buildPaste,250)});
 $('#pasteList').addEventListener('click',e=>{const f=e.target.closest('[data-flip]');if(!f)return;e.preventDefault();const i=+f.dataset.flip;pasteFlip.has(i)?pasteFlip.delete(i):pasteFlip.add(i);buildPaste()});
@@ -1055,7 +1057,7 @@ $('#perPrev').onclick=()=>movePeriod(-1);
 $('#perNext').onclick=()=>movePeriod(1);
 $('#xlsxBtn').onclick=exportXlsx;
 $('#tsvBtn').onclick=exportTsv;
-['fHang','fPhi','fUng','fPhone'].forEach(id=>$('#'+id).addEventListener('input',updatePreview));
+['fHang','fPhi','fUng','fPhone','fShopPhone'].forEach(id=>$('#'+id).addEventListener('input',updatePreview));
 $('#fPhone').addEventListener('input',()=>{if($('#fAddr').value.trim())return;const ci=custInfo($('#fPhone').value,editId);
   if(ci&&ci.lastAddr){$('#fAddr').value=ci.lastAddr;$('#fAddr').classList.add('autofill');setTimeout(()=>$('#fAddr').classList.remove('autofill'),1500)}});
 $('#form').addEventListener('submit',e=>{e.preventDefault();saveQuick(false)});
