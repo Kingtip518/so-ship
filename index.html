@@ -86,6 +86,8 @@ h2{font-family:var(--display);font-weight:700;font-size:22px;margin:4px 0 0;lett
 .order{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 12px 10px;display:flex;flex-direction:column;gap:8px}
 .o-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .o-shop{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.o-line{font-size:14px;min-width:0;overflow-wrap:anywhere;line-height:1.55}
+.o-line .lb{color:var(--muted);font-size:13px}
 .callmini{display:inline-flex;align-items:center;gap:4px;text-decoration:none;background:var(--ok);color:#fff;border-radius:999px;padding:3px 10px 3px 8px;font-size:12px;font-weight:700;line-height:1.4}
 .callmini svg{width:13px;height:13px}
 fieldset.grp legend{display:flex;align-items:center;gap:8px}
@@ -391,7 +393,7 @@ h3.mini{margin:0;font-size:15px}
         <div class="shopchips" id="shopChips"></div>
       </fieldset>
       <fieldset class="grp">
-        <legend>Nơi nhận</legend>
+        <legend>Người nhận</legend>
         <div class="grid2">
           <input class="inp" id="fTen" placeholder="Tên khách" autocomplete="off" aria-label="Tên khách nhận">
           <input class="inp num" id="fPhone" inputmode="tel" placeholder="SĐT khách" aria-label="Số điện thoại khách">
@@ -503,7 +505,8 @@ function sample(){
   function mk(id,d,a,i){return{id:'m'+id,date:d,shop:a[0],addr:a[1],phone:a[2],hang:a[3]*1000,phi:a[4]*1000,phiBy:a[5],ung:a[6]*1000,status:a[7],bomFee:true,note:'',t:Date.now()-i*60000}}
 }
 function load(){
-  try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s);if(o&&Array.isArray(o.orders)){o.shopPhones=o.shopPhones||{};o.shopDefs=o.shopDefs||{};o.shops=o.shops||[];o.settled=o.settled||{};return o}}}catch(e){}
+  try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s);if(o&&Array.isArray(o.orders)){o.orders.forEach(x=>{if(x.shop==='Chưa ghi nơi gửi'||x.shop==='Shop chưa đặt tên')x.shop='';if(x.addr==='Chưa ghi địa chỉ')x.addr='';if(/^Người gửi \d/.test(x.shop||'')){x.sdtGui=x.sdtGui||x.shop.replace(/\D/g,'');x.shop=''}});
+    o.shopPhones=o.shopPhones||{};o.shopDefs=o.shopDefs||{};o.shops=o.shops||[];o.settled=o.settled||{};return o}}}catch(e){}
   return{orders:[],shops:[],settled:{},shopPhones:{},shopDefs:{},name:'',sample:false};
 }
 const IC={
@@ -526,11 +529,14 @@ function calc(o){
   return{thu:0,tra:0,lai:0,done:false};
 }
 function bomCount(phone,exceptId){const p=normPhone(phone);if(p.length<9)return 0;return state.orders.filter(o=>o.id!==exceptId&&o.status==='bom'&&normPhone(o.phone)===p).length}
+const NO_SENDER='Không ghi nơi gửi';
+function sdtGui(o){return o.sdtGui||(o.shop?state.shopPhones[o.shop]||'':'')}
+function senderKey(o){return o.shop||(o.sdtGui?fmtPhone(o.sdtGui):'')||NO_SENDER}
 function custInfo(phone,exceptId){const p=normPhone(phone);if(p.length<9)return null;
   const list=state.orders.filter(o=>o.id!==exceptId&&normPhone(o.phone)===p).sort((a,b)=>b.t-a.t);
   if(!list.length)return null;
   const giao=list.filter(o=>o.status==='giao').length,bom=list.filter(o=>o.status==='bom').length;
-  const lastAddr=(list.find(o=>o.addr&&o.addr!=='Chưa ghi địa chỉ')||{}).addr||'';
+  const lastAddr=(list.find(o=>o.addr)||{}).addr||'';
   return{giao,bom,lastAddr,n:list.length}}
 function custLine(ci){if(!ci)return'';if(ci.bom)return`Số này đã bom ${ci.bom} lần${ci.giao?`, nhận ${ci.giao} lần`:''}. Nên gọi xác nhận trước khi đi.`;
   return ci.giao?`Khách quen: đã nhận ${ci.giao} lần, chưa bom lần nào.`:''}
@@ -574,7 +580,7 @@ function renderOrders(os){
     const thuKhach=o.hang+(o.phiBy==='khach'?o.phi:0);
     return `<article class="order" data-id="${o.id}">
       <div class="o-top">
-        <div style="min-width:0"><div class="o-shop"><span>${esc(o.shop)}</span>${(()=>{const sp=normPhone(state.shopPhones[o.shop]||'');return sp?`<a class="callmini" href="tel:${sp}" aria-label="Gọi nơi gửi ${esc(o.shop)}">${IC.call}Gọi nơi gửi</a>`:''})()}</div><div class="o-addr">${o.ten?'<b style="color:var(--ink)">'+esc(o.ten)+'</b> · ':''}${esc(o.addr)}${o.phone?' · '+esc(o.phone):''}</div>${o.note?`<div class="o-addr">Ghi chú: ${esc(o.note)}</div>`:''}</div>
+        <div style="min-width:0">${(()=>{const sp=normPhone(sdtGui(o));return`<div class="o-line"><span class="lb">Nơi gửi:</span> <b>${esc(o.shop)}</b>${sp?`${o.shop?' · ':''}<span class="num">${fmtPhone(sp)}</span> <a class="callmini" href="tel:${sp}" aria-label="Gọi nơi gửi">${IC.call}Gọi nơi gửi</a>`:''}</div>`})()}<div class="o-line"><span class="lb">Người nhận:</span> ${[o.ten?'<b>'+esc(o.ten)+'</b>':'',esc(o.addr),o.phone?'<span class="num">'+fmtPhone(o.phone)+'</span>':''].filter(Boolean).join(' · ')}</div>${o.note?`<div class="o-addr">Ghi chú: ${esc(o.note)}</div>`:''}</div>
         <div class="o-money"><b class="num">${shortMoney(thuKhach)}</b><small>thu của khách</small></div>
       </div>
       <div class="chips">
@@ -583,7 +589,7 @@ function renderOrders(os){
         ${o.ung?`<span class="chip plain num">Đã ứng ${shortMoney(o.ung)}</span>`:''}
         ${b?`<span class="chip warn">Số này từng bom ${b} lần</span>`:(()=>{const ci=custInfo(o.phone,o.id);return ci&&ci.giao>=2?`<span class="chip st-giao">Khách quen ${ci.giao} lần</span>`:''})()}
       </div>
-      ${contactRow(o.phone,o.status==='giao'||o.status==='bom'?'':(o.addr==='Chưa ghi địa chỉ'?'':o.addr),'khách')}
+      ${contactRow(o.phone,o.status==='giao'||o.status==='bom'?'':o.addr,'khách')}
       <div class="o-act">
         ${o.status!=='giao'?'<button class="b-giao" data-a="giao">✓ Đã giao</button>':''}
         ${o.status!=='bom'?'<button class="b-bom" data-a="bom">Khách bom</button>':''}
@@ -596,7 +602,7 @@ function renderOrders(os){
 
 function shopSum(os){
   const g={};
-  os.forEach(o=>{(g[o.shop]=g[o.shop]||[]).push(o)});
+  os.forEach(o=>{const k=senderKey(o);(g[k]=g[k]||[]).push(o)});
   return Object.entries(g).map(([shop,list])=>{
     const r={shop,list,giao:0,bom:0,pend:0,hang:0,phiTru:0,ung:0,phiBom:0,tra:0};
     list.forEach(o=>{const c=calc(o);
@@ -641,7 +647,7 @@ function renderSettle(os){
         <button class="btn pri grow" data-a="copy">Sao chép tin đối soát</button>
         <button class="btn sec" data-a="done">${done?'Bỏ đánh dấu':'Đã chuyển'}</button>
       </div>
-      ${state.shopPhones[r.shop]?`<div style="padding:0 12px 12px">${contactRow(state.shopPhones[r.shop],'','nơi gửi')}</div>`:''}
+      ${(()=>{const sp=sdtGui(r.list.find(o=>sdtGui(o))||{});return sp?`<div style="padding:0 12px 12px">${contactRow(sp,'','nơi gửi')}</div>`:''})()}
       <div class="s-copy" hidden></div>
     </article>`}).join('');
   L._rs=rs;
@@ -733,7 +739,7 @@ function renderIncome(){
 function exportRows(){
   const os=state.orders.filter(inRange).sort((a,b)=>a.date.localeCompare(b.date)||a.t-b.t);
   const head=['Ngày','Nơi gửi','SĐT nơi gửi','Tên khách','Địa chỉ giao','SĐT khách','Trạng thái','Tiền hàng thu hộ','Phí ship','Phí ship do ai trả','Đã ứng trước','Thu của khách','Chuyển lại nơi gửi','Thu nhập','Ghi chú'];
-  const rows=os.map(o=>{const c=calc(o);return[fmtD(o.date),o.shop,state.shopPhones[o.shop]||'',o.ten||'',o.addr,o.phone,ST[o.status],o.hang,o.phi,o.phiBy==='khach'?'Khách trả':'Nơi gửi trả',o.ung,c.thu,c.tra,c.lai,o.note]});
+  const rows=os.map(o=>{const c=calc(o);return[fmtD(o.date),o.shop,sdtGui(o)?fmtPhone(sdtGui(o)):'',o.ten||'',o.addr,o.phone,ST[o.status],o.hang,o.phi,o.phiBy==='khach'?'Khách trả':'Nơi gửi trả',o.ung,c.thu,c.tra,c.lai,o.note]});
   const sh=shopSum(os).map(r=>[r.shop,r.giao,r.bom,r.pend,r.hang,r.phiTru,r.ung,r.phiBom,r.list.reduce((a,o)=>a+calc(o).lai,0),r.tra]);
   const shHead=['Nơi gửi','Đơn đã giao','Đơn bom','Đơn chưa xong','Tiền hàng thu hộ','Trừ phí ship nơi gửi trả','Trừ tiền đã ứng','Trừ phí đơn bom','Thu nhập phí ship','Chuyển lại nơi gửi'];
   if(sh.length){const sum=i=>sh.reduce((a,r)=>a+r[i],0);sh.push(['TỔNG CỘNG',sum(1),sum(2),sum(3),sum(4),sum(5),sum(6),sum(7),sum(8),sum(9)])}
@@ -775,7 +781,7 @@ function kToVnd(s){s=String(s||'').trim().replace(/\s/g,'');if(!s)return 0;
 function vndToK(n){if(!n)return'';const k=n/1000;return Number.isInteger(k)?String(k):String(k).replace('.',',')}
 function setSeg(id,v){document.querySelectorAll('#'+id+' button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===v)))}
 function shopsList(){const s=new Set(state.shops||[]);state.orders.forEach(o=>s.add(o.shop));return[...s].filter(Boolean)}
-function recentShops(){const seen=[];state.orders.slice().sort((a,b)=>b.t-a.t).forEach(o=>{if(o.shop&&o.shop!=='Chưa ghi nơi gửi'&&!seen.includes(o.shop))seen.push(o.shop)});return seen.slice(0,5)}
+function recentShops(){const seen=[];state.orders.slice().sort((a,b)=>b.t-a.t).forEach(o=>{if(o.shop&&!seen.includes(o.shop))seen.push(o.shop)});return seen.slice(0,5)}
 
 let mode='dan',pasteItems=[],pasteShop='',pasteFlip=new Set();
 const shopDef=n=>(state.shopDefs||{})[n]||null;
@@ -806,23 +812,23 @@ function openForm(o){
   $('#footQuick').style.gridTemplateColumns=o?'1fr 2fr':'';
   $('#pasteText').value='';$('#pastePhi').value='';pasteShop='';pasteFlip=new Set();$('#pasteShopInp').value='';$('#pasteShopBox').hidden=true;$('#pastePhiBox').hidden=true;pasteItems=[];renderPasteList();
   $('#shopList').innerHTML=shopsList().map(s=>`<option value="${esc(s)}">`).join('');
-  $('#shopChips').innerHTML=recentShops().filter(n=>n!=='Chưa ghi nơi gửi').map(s=>`<button type="button" data-s="${esc(s)}" aria-pressed="false">${esc(s)}</button>`).join('');
+  $('#shopChips').innerHTML=recentShops().map(s=>`<button type="button" data-s="${esc(s)}" aria-pressed="false">${esc(s)}</button>`).join('');
   clearOrderFields();$('#fPhi').value='';form.phiBy='khach';setSeg('segPhi','khach');
   $('#more').open=false;
   if(o){
-    $('#fShop').value=o.shop==='Chưa ghi nơi gửi'?'':o.shop;$('#fTen').value=o.ten||'';$('#fAddr').value=o.addr==='Chưa ghi địa chỉ'?'':o.addr;$('#fPhone').value=o.phone;
+    $('#fShop').value=o.shop||'';$('#fTen').value=o.ten||'';$('#fAddr').value=o.addr||'';$('#fPhone').value=o.phone;
     $('#fHang').value=vndToK(o.hang);$('#fPhi').value=vndToK(o.phi);$('#fUng').value=vndToK(o.ung);
-    $('#fNote').value=o.note;$('#fBomFee').checked=o.bomFee;$('#fShopPhone').value=state.shopPhones[o.shop]||'';
+    $('#fNote').value=o.note;$('#fBomFee').checked=o.bomFee;$('#fShopPhone').value=sdtGui(o);
     form.phiBy=o.phiBy;form.status=o.status;setSeg('segPhi',o.phiBy);setSeg('segSt',o.status);
     if(o.ung||o.note||o.status!=='dang')$('#more').open=true;
     document.querySelectorAll('#shopChips button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.s===o.shop)));
-  } else setShop(state.sample?'':(recentShops()[0]||''));
+  } else setShop('');
   $('#sheetBg').hidden=false;updatePreview();
   setMode(o?'nhanh':'dan');
 }
 function closeForm(){$('#sheetBg').hidden=true;editId=null}
 
-function readForm(){return{shop:$('#fShop').value.trim()||'Chưa ghi nơi gửi',ten:$('#fTen').value.trim(),addr:$('#fAddr').value.trim()||'Chưa ghi địa chỉ',phone:$('#fPhone').value.trim(),
+function readForm(){return{shop:$('#fShop').value.trim(),sdtGui:normPhone($('#fShopPhone').value),ten:$('#fTen').value.trim(),addr:$('#fAddr').value.trim(),phone:$('#fPhone').value.trim(),
   hang:kToVnd($('#fHang').value),phi:kToVnd($('#fPhi').value),ung:kToVnd($('#fUng').value),phiBy:form.phiBy,status:form.status,bomFee:$('#fBomFee').checked,note:$('#fNote').value.trim()}}
 function updateSenderCall(){const p=normPhone($('#fShopPhone').value),a=$('#callSender');
   if(p.length>=9){a.href='tel:'+p;a.innerHTML=IC.call+'Gọi nơi gửi';a.hidden=false}else a.hidden=true}
@@ -947,12 +953,13 @@ function splitOrders(raw){
 function buildPaste(){
   const {head,parts}=splitOrders($('#pasteText').value);
   const hs=head?extractSender(head,false,true):{name:'',phone:'',rest:''};
-  const headShop=hs.name||(head?findShop(head):'')||(hs.phone?'Người gửi '+hs.phone:'');
+  const headShop=hs.name||(head?findShop(head):'');
   const headParsed=head?parseOne(hs.rest||head):{};
   const prevPick=pasteItems.map(o=>o.pick);
   pasteItems=parts.map((p,i)=>{const es=extractSender(p,pasteFlip.has(i));const o=parseOne(es.rest);
     o.senderPhone=es.phone||hs.phone||'';o.canFlip=es.n===2;
-    o.shopFound=es.name||(es.phone?'Người gửi '+es.phone:'')||o.shop||headShop||findShop($('#pasteText').value)||'';
+    o.shopFound=es.name||o.shop||headShop||findShop($('#pasteText').value)||'';
+    o.hasSender=!!(o.shopFound||o.senderPhone);
     o.shop=o.shopFound||pasteShop;
     const d=shopDef(o.shop);
     o.phiFromText=!!o.phi;
@@ -961,8 +968,8 @@ function buildPaste(){
     o.ci=custInfo(o.phone);if(!o.addr&&o.ci&&o.ci.lastAddr){o.addr=o.ci.lastAddr;o.addrMem=true}
     o.pick=!!(o.hang||o.phi)&&!(o.ci&&o.ci.bom);return o});
   if(prevPick.length===pasteItems.length)pasteItems.forEach((o,i)=>o.pick=prevPick[i]&&!!(o.hang||o.phi));
-  const needShop=pasteItems.some(o=>!o.shopFound);
-  $('#pasteShopBox').hidden=!needShop;
+  const needShop=pasteItems.some(o=>!o.hasSender);
+  $('#pasteShopBox').hidden=true;
   const needPhi=pasteItems.some(o=>!o.phiFromText);
   $('#pastePhiBox').hidden=!needPhi;
   if(needPhi&&!$('#pastePhi').value){const d=shopDef(pasteItems[0]&&pasteItems[0].shop);if(d)$('#pastePhi').value=vndToK(d.phi)}
@@ -973,8 +980,8 @@ function renderPasteList(){
   if(!pasteItems.length){L.innerHTML='';$('#pasteSave').disabled=true;$('#pasteSave').textContent='Thêm đơn';return}
   L.innerHTML=`<div class="sub" style="margin:0">Tìm thấy <b>${pasteItems.length}</b> đơn. Bỏ tích đơn nào sai, bấm vào đơn để sửa sau khi thêm.</div>`+
     pasteItems.map((o,i)=>`<label class="pcard"><input type="checkbox" data-i="${i}" ${o.pick?'checked':''}>
-      <div class="pc-body"><div style="display:flex;justify-content:space-between;gap:8px">${o.shop?`<span><b>${esc(o.shop)}</b>${o.senderPhone&&!o.shop.includes(o.senderPhone)?` <span style="color:var(--muted);font-size:12px">· ${esc(o.senderPhone)}</span>`:''}</span>`:'<b style="color:var(--muted);font-size:14px">Chưa ghi nơi gửi</b>'}<span class="pc-money num">${o.hang?shortMoney(o.hang):'—'}</span></div>
-      <span>${o.ten?'<b>'+esc(o.ten)+'</b> · ':''}${esc(o.addr||'Chưa rõ địa chỉ')}${o.phone?' · '+esc(o.phone):''}</span>
+      <div class="pc-body"><div style="display:flex;justify-content:space-between;gap:8px"><span class="o-line"><span class="lb">Nơi gửi:</span> <b>${esc(o.shop)}</b>${o.senderPhone?`${o.shop?' · ':''}<span class="num">${esc(o.senderPhone)}</span>`:''}</span><span class="pc-money num">${o.hang?shortMoney(o.hang):'—'}</span></div>
+      <span class="o-line"><span class="lb">Người nhận:</span> ${[o.ten?'<b>'+esc(o.ten)+'</b>':'',esc(o.addr),esc(o.phone)].filter(Boolean).join(' · ')}</span>
       ${o.mon?`<span style="color:var(--muted);font-size:12px">Hàng: ${esc(o.mon)}</span>`:''}
       ${o.canFlip?`<button type="button" class="flip" data-flip="${i}">⇄ Nhầm số người gửi với số khách? Bấm để đổi</button>`:''}
       <span style="color:var(--muted);font-size:12px">Ship ${o.phi?shortMoney(o.phi):'chưa rõ'} · ${o.phiBy==='shop'?'nơi gửi trả':'khách trả'}</span>
@@ -985,6 +992,7 @@ function renderPasteList(){
   $('#pasteSave').disabled=!n;$('#pasteSave').textContent=n?`Thêm ${n} đơn`:'Thêm đơn';
 }
 function rememberShop(f){
+  if(!f.shop)return;
   state.shopDefs=state.shopDefs||{};
   if(f.phi)state.shopDefs[f.shop]={phi:f.phi,phiBy:f.phiBy};
   if(!state.shops.includes(f.shop))state.shops.push(f.shop);
@@ -998,7 +1006,7 @@ function saveQuick(andNext){
   if(editId){const o=state.orders.find(x=>x.id===editId);Object.assign(o,f)}
   else state.orders.push(Object.assign({id:newId(),date:day,t:Date.now()},f));
   rememberShop(f);
-  const sp=$('#fShopPhone').value.trim();if(sp&&f.shop!=='Chưa ghi nơi gửi')state.shopPhones[f.shop]=sp;
+  if(f.sdtGui&&f.shop)state.shopPhones[f.shop]=f.sdtGui;
   save();render();
   if(andNext){clearOrderFields();$('#more').open=false;updatePreview();
     const n=dayOrders(day).length;toast(`Đã lưu. Hôm nay ${n} đơn. Nhập đơn tiếp.`);try{$('#fHang').focus()}catch(e){}return}
@@ -1008,9 +1016,10 @@ function savePaste(){
   const pick=pasteItems.filter(o=>o.pick);if(!pick.length)return;
   if(state.sample)clearSampleData(true);
   const t=Date.now();
-  pick.forEach((o,i)=>{const f={shop:o.shop||'Chưa ghi nơi gửi',addr:o.addr||'Chưa ghi địa chỉ',phone:o.phone,hang:o.hang,phi:o.phi,ung:0,phiBy:o.phiBy||'khach',status:'dang',bomFee:true,ten:o.ten||'',note:o.mon||''};
+  pick.forEach((o,i)=>{const f={shop:o.shop||'',sdtGui:normPhone(o.senderPhone||''),addr:o.addr||'',phone:o.phone,hang:o.hang,phi:o.phi,ung:0,phiBy:o.phiBy||'khach',status:'dang',bomFee:true,ten:o.ten||'',note:o.mon||''};
     state.orders.push(Object.assign({id:newId()+i,date:day,t:t-i},f));rememberShop(f);
-    if(o.senderPhone&&f.shop!=='Chưa ghi nơi gửi'&&!state.shopPhones[f.shop])state.shopPhones[f.shop]=o.senderPhone.replace(/\s/g,'')});
+    if(f.sdtGui&&f.shop&&!state.shopPhones[f.shop])state.shopPhones[f.shop]=f.sdtGui});
+  lastClip=$('#pasteText').value.trim();try{localStorage.setItem('soShip.lastClip',lastClip)}catch(e){}
   save();closeForm();render();toast(`Đã thêm ${pick.length} đơn.`);
 }
 
@@ -1030,7 +1039,16 @@ document.addEventListener('click',e=>{if(!e.target.closest('#undoBulk')||!lastBu
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{view=b.dataset.v;render();window.scrollTo(0,0)});
 $('#prevDay').onclick=()=>{day=addDays(day,-1);render()};
 $('#nextDay').onclick=()=>{if(day<today()){day=addDays(day,1);render()}};
-$('#addBtn').onclick=()=>openForm(null);
+/* Bấm "+ Thêm đơn" là đọc luôn tin vừa chép, giống tin đơn thì tự dán */
+let lastClip='';try{lastClip=localStorage.getItem('soShip.lastClip')||''}catch(e){}
+const looksLikeOrder=t=>!!t&&t.length<4000&&(PHONE_RE.test(t)||/\d+\s*(k|tr|nghìn|ngàn)(?![a-zà-ỹ])/i.test(t));
+async function tryAutoPaste(){
+  if(!navigator.clipboard||!navigator.clipboard.readText)return;
+  try{const t=(await navigator.clipboard.readText()||'').trim();
+    if(!looksLikeOrder(t)||t===lastClip||mode!=='dan'||$('#sheetBg').hidden||$('#pasteText').value.trim())return;
+    $('#pasteText').value=t;pasteFlip=new Set();buildPaste();toast('Đã dán tin vừa chép.')}catch(e){}
+}
+$('#addBtn').onclick=()=>{openForm(null);tryAutoPaste()};
 $('#closeForm').onclick=closeForm;
 $('#cancelForm').onclick=closeForm;
 $('#cancelForm2').onclick=closeForm;
@@ -1053,7 +1071,7 @@ $('#pasteSave').onclick=savePaste;
 $('#pasteClip').onclick=async()=>{
   try{const t=await navigator.clipboard.readText();
     if(!t||!t.trim()){toast('Chưa có tin nào được chép. Vào Zalo, giữ tay vào tin đơn, chọn Sao chép.');return}
-    $('#pasteText').value=t;pasteFlip=new Set();buildPaste();toast('Đã dán tin.')}
+    $('#pasteText').value=t.trim();pasteFlip=new Set();buildPaste();toast('Đã dán tin.')}
   catch(e){toast('Máy chưa cho dán tự động. Giữ tay vào ô bên dưới rồi chọn Dán.');try{$('#pasteText').focus()}catch(_){}}};
 $('#saveNext').onclick=()=>saveQuick(true);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-copy]');if(!b)return;const p=b.dataset.copy;
