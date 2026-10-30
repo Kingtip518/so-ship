@@ -63,6 +63,15 @@ button{cursor:pointer}
 .hdr-in{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 .brand{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .logo{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.helpbtn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--hdr-muted);background:none;color:var(--hdr-ink);font-family:var(--body);font-size:14px;font-weight:700;line-height:1;padding:0;margin-left:4px}
+.helpbtn:hover{background:rgba(255,255,255,.12)}
+.help details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.help summary{cursor:pointer;font-weight:700;font-size:15px}
+.help details p,.help details li{font-size:14px;line-height:1.6;margin:6px 0 0}
+.help details ol,.help details ul{padding-left:20px;margin:4px 0 0}
+.help h4{margin:6px 0 0;font-size:16px}
+.contactcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.contactcard .row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .logo i{display:inline-block;width:12px;height:22px;background:var(--accent);border-radius:3px;transform:skewX(-14deg)}
 .daynav{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.08);border-radius:999px;padding:3px}
 .daynav button{background:none;border:0;color:var(--hdr-ink);width:34px;height:34px;border-radius:50%;font-size:18px}
@@ -172,7 +181,7 @@ textarea.inp{min-height:84px;resize:vertical}
 .shopchips.big button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .bigmoney{font-family:var(--display);font-size:26px;font-weight:700;padding:8px 12px}
 fieldset.grp{border:1px solid var(--line);border-radius:12px;padding:8px 10px 10px;margin:0;display:flex;flex-direction:column;gap:8px;background:var(--surface);min-width:0}
-fieldset.grp legend{font-weight:700;font-size:13px;padding:0 4px}
+fieldset.grp legend{font-weight:800;font-size:16px;padding:0 6px;color:var(--ink)}
 .opt{font-weight:400;color:var(--muted);font-size:11px}
 details.more{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 details.more summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
@@ -241,7 +250,7 @@ h3.mini{margin:0;font-size:15px}
 <header class="hdr">
   <div class="hdr-in">
     <div class="brand">
-      <div class="logo"><i></i>SỔ SHIP</div>
+      <div class="logo"><i></i>SỔ SHIP<button type="button" class="helpbtn" id="helpBtn" aria-label="Hướng dẫn và liên hệ">?</button></div>
       <div class="daynav">
         <button id="prevDay" aria-label="Ngày trước">‹</button>
         <span id="dayLabel">Hôm nay</span>
@@ -458,6 +467,77 @@ h3.mini{margin:0;font-size:15px}
   </form>
 </div>
 
+<div class="sheet-bg" id="helpBg" hidden>
+  <div class="sheet help" role="dialog" aria-labelledby="helpTitle">
+    <div class="sheet-h"><h3 id="helpTitle">Hướng dẫn sử dụng</h3><button type="button" class="x" id="helpClose" aria-label="Đóng">✕</button></div>
+
+    <details open>
+      <summary>1. Thêm đơn bằng cách dán tin Zalo</summary>
+      <ol>
+        <li>Trong nhóm Zalo, giữ tay vào tin đơn, chọn <b>Sao chép</b>.</li>
+        <li>Mở Sổ Ship, bấm <b>+ Thêm đơn</b>.</li>
+        <li>Giữ tay vào ô vàng, chọn <b>Dán</b>. Sổ tự tách nơi gửi, người nhận, số điện thoại, tiền thu hộ, phí ship.</li>
+        <li>Kiểm tra lại, bỏ tích đơn nào sai, bấm <b>Thêm đơn</b>.</li>
+      </ol>
+      <p>Một tin có nhiều đơn (đánh số 1, 2, 3 hoặc mỗi dòng một đơn) cũng tách được. Nếu sổ nhầm số người gửi với số khách, bấm dòng chữ xanh <b>⇄ đổi</b>.</p>
+    </details>
+
+    <details>
+      <summary>2. Nhập tay</summary>
+      <p>Trong bảng thêm đơn chọn <b>Nhập tay</b>. Ghi nơi gửi (không bắt buộc), người nhận, tiền thu hộ, phí ship. Tiền gõ theo nghìn: gõ <b>350</b> là 350.000đ.</p>
+      <p>Nhận nhiều đơn của cùng một nơi gửi thì bấm <b>Lưu, thêm tiếp</b>: nơi gửi được giữ lại, chỉ cần gõ đơn tiếp theo.</p>
+    </details>
+
+    <details>
+      <summary>3. Khi đi giao</summary>
+      <ul>
+        <li>Mỗi đơn có nút <b>Gọi khách</b>, <b>Zalo</b>, <b>Chỉ đường</b>, và <b>Gọi nơi gửi</b> nếu có số người gửi.</li>
+        <li>Giao xong bấm <b>✓ Đã giao</b>; khách không nhận bấm <b>Khách bom</b>; khách hẹn bấm <b>Hẹn lại</b>.</li>
+        <li>Cuối tuyến bấm <b>Giao xong hết</b> để ghi tất cả đơn còn lại. Bấm nhầm thì bấm <b>Hoàn tác</b>.</li>
+      </ul>
+    </details>
+
+    <details>
+      <summary>4. Đối soát cuối ngày</summary>
+      <p>Vào thẻ <b>Đối soát</b>: mỗi nơi gửi có số tiền phải chuyển lại, đã trừ phí ship và tiền ứng trước. Bấm <b>Sao chép tin đối soát</b> rồi dán vào Zalo gửi cho nơi gửi. Chuyển tiền xong bấm <b>Đã chuyển</b>.</p>
+    </details>
+
+    <details>
+      <summary>5. Thống kê và xuất file</summary>
+      <p>Thẻ <b>Thống kê</b> xem thu nhập theo ngày, tuần, tháng và theo từng nơi gửi. Bấm <b>Tải file Excel</b> để lưu sổ, hoặc <b>Sao chép bảng</b> để dán vào Excel, Google Trang tính.</p>
+    </details>
+
+    <details>
+      <summary>6. Cảnh báo khách bom và khách quen</summary>
+      <p>Số điện thoại từng bom hàng sẽ hiện chữ đỏ để bạn gọi xác nhận trước khi đi. Khách đã nhận hàng nhiều lần hiện nhãn xanh <b>Khách quen</b>, gõ số khách quen là sổ tự điền địa chỉ cũ. Thông tin này chỉ nằm trong sổ của bạn, không chia sẻ cho ai.</p>
+    </details>
+
+    <details>
+      <summary>7. Sao lưu dữ liệu (nên làm)</summary>
+      <p>Dữ liệu chỉ lưu trên điện thoại đang dùng, không gửi lên mạng. Đổi máy hoặc xóa dữ liệu trình duyệt là mất. Thỉnh thoảng vào <b>Thống kê → Sao chép bản sao lưu</b>, dán vào Zalo <b>Cloud của tôi</b>. Khi đổi máy, chép đoạn đó và chọn <b>Khôi phục từ bản sao lưu</b>.</p>
+    </details>
+
+    <details>
+      <summary>8. Cài lên màn hình điện thoại</summary>
+      <p><b>Android:</b> bấm <b>Cài ngay</b> trên dải thông báo đầu trang, hoặc mở menu ⋮ của Chrome chọn <b>Thêm vào màn hình chính</b>.<br><b>iPhone:</b> mở bằng Safari, bấm nút <b>Chia sẻ</b>, chọn <b>Thêm vào MH chính</b>.</p>
+    </details>
+
+    <h4>Liên hệ</h4>
+    <div class="contactcard">
+      <span>Góp ý, báo lỗi hoặc cần hỗ trợ, liên hệ người phát triển:</span>
+      <b style="font-size:16px">Nguyễn Minh Tú</b>
+      <div class="row"><span>Điện thoại, Zalo: <b class="num" style="user-select:all">0962 430 616</b></span></div>
+      <div class="contact">
+        <a class="call" href="tel:0962430616">Gọi điện</a>
+        <a class="zalo" href="https://zalo.me/0962430616" target="_blank" rel="noopener">Nhắn Zalo</a>
+        <button type="button" data-copy="0962430616">Chép số</button>
+      </div>
+      <div class="row"><span>Telegram: <b style="user-select:all">@minh84qn</b></span><a href="https://t.me/minh84qn" target="_blank" rel="noopener" style="color:var(--wait);font-weight:600;font-size:13px">Mở Telegram</a></div>
+    </div>
+    <p class="sub" style="margin:0;text-align:center">Sổ Ship · miễn phí, không quảng cáo</p>
+  </div>
+</div>
+
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -572,7 +652,8 @@ function renderOrders(os){
       <span>1. Bấm <b>+ Thêm đơn</b>, ghi nơi gửi, nơi nhận, số tiền, bấm Lưu.</span>
       <span>2. Hoặc chép tin đơn trong nhóm Zalo, chọn <b>Dán tin Zalo</b>, sổ tự tách đơn.</span>
       <span>3. Cuối ngày vào <b>Đối soát</b>, bấm sao chép rồi gửi Zalo cho nơi gửi.</span>
-      <button type="button" class="btn sec" id="loadSample">Xem thử với dữ liệu mẫu</button></div>`;return}
+      <button type="button" class="btn sec" id="loadSample">Xem thử với dữ liệu mẫu</button>
+      <button type="button" class="btn sec" onclick="document.getElementById('helpBg').hidden=false">Xem hướng dẫn đầy đủ</button></div>`;return}
     L.innerHTML='<div class="empty">Chưa có đơn nào trong ngày này.<br>Bấm <b>+ Thêm đơn</b> ở góc dưới để ghi đơn đầu tiên.</div>';return}
   const pend=os.filter(o=>o.status==='dang');
   const bulk=pend.length>=2?`<div class="bulkbar"><span>Còn <b>${pend.length}</b> đơn đang giao</span><button type="button" id="bulkGiao">✓ Giao xong hết ${pend.length} đơn</button></div>`:'';
@@ -1040,6 +1121,10 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{view=b.dataset.v;ren
 $('#prevDay').onclick=()=>{day=addDays(day,-1);render()};
 $('#nextDay').onclick=()=>{if(day<today()){day=addDays(day,1);render()}};
 $('#addBtn').onclick=()=>openForm(null);
+$('#helpBtn').onclick=()=>{$('#helpBg').hidden=false};
+$('#helpClose').onclick=()=>{$('#helpBg').hidden=true};
+$('#helpBg').addEventListener('click',e=>{if(e.target.id==='helpBg')$('#helpBg').hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#helpBg').hidden=true});
 $('#closeForm').onclick=closeForm;
 $('#cancelForm').onclick=closeForm;
 $('#cancelForm2').onclick=closeForm;
