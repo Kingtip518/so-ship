@@ -27,6 +27,7 @@
   --bg:#F1F4F6; --surface:#FFFFFF; --ink:#14202B; --muted:#5A6874; --line:#DAE1E7;
   --hdr:#14202B; --hdr-ink:#F4F7F9; --hdr-muted:#9FB0BE;
   --accent:#F5B800; --accent-ink:#1C1500; --accent-soft:#FFF4CC;
+  --edge:#B9C5CF;
   --ok:#1C8A57; --ok-soft:#E2F4EA; --bad:#CC3B2E; --bad-soft:#FBE6E3; --wait:#2C66C9; --wait-soft:#E3ECFB;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -36,12 +37,14 @@
   --bg:#0D141A; --surface:#16202A; --ink:#E7EDF2; --muted:#94A3B0; --line:#273440;
   --hdr:#080D12; --hdr-ink:#EEF3F7; --hdr-muted:#8696A4;
   --accent:#F7C531; --accent-ink:#1C1500; --accent-soft:#3A3010;
+  --edge:#3A4A58;
   --ok:#3CC285; --ok-soft:#123425; --bad:#FF6E5E; --bad-soft:#3D1A17; --wait:#72A4FF; --wait-soft:#172A4A;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0D141A; --surface:#16202A; --ink:#E7EDF2; --muted:#94A3B0; --line:#273440;
   --hdr:#080D12; --hdr-ink:#EEF3F7; --hdr-muted:#8696A4;
   --accent:#F7C531; --accent-ink:#1C1500; --accent-soft:#3A3010;
+  --edge:#3A4A58;
   --ok:#3CC285; --ok-soft:#123425; --bad:#FF6E5E; --bad-soft:#3D1A17; --wait:#72A4FF; --wait-soft:#172A4A;
   color-scheme:dark}
 
@@ -92,7 +95,12 @@ h2{font-family:var(--display);font-weight:700;font-size:22px;margin:4px 0 0;lett
 
 /* Thẻ đơn */
 .list{display:flex;flex-direction:column;gap:10px}
-.order{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 12px 10px;display:flex;flex-direction:column;gap:8px}
+.order{position:relative;background:var(--surface);border:1.5px solid var(--edge);border-left:6px solid var(--stripe,var(--wait));border-radius:var(--r);padding:0 12px 10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(10,20,30,.08)}
+#orderList{gap:16px}
+.order.s-dang{--stripe:var(--wait)}.order.s-giao{--stripe:var(--ok)}.order.s-bom{--stripe:var(--bad)}.order.s-hen{--stripe:var(--accent)}
+.o-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 -12px;padding:6px 12px;background:var(--bg);border-bottom:1px solid var(--line);border-radius:calc(var(--r) - 2px) calc(var(--r) - 2px) 0 0}
+.o-no{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.3px}
+.o-time{color:var(--muted);font-size:12px}
 .o-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .o-shop{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .o-line{font-size:14px;min-width:0;overflow-wrap:anywhere;line-height:1.55}
@@ -657,16 +665,18 @@ function renderOrders(os){
     L.innerHTML='<div class="empty">Chưa có đơn nào trong ngày này.<br>Bấm <b>+ Thêm đơn</b> ở góc dưới để ghi đơn đầu tiên.</div>';return}
   const pend=os.filter(o=>o.status==='dang');
   const bulk=pend.length>=2?`<div class="bulkbar"><span>Còn <b>${pend.length}</b> đơn đang giao</span><button type="button" id="bulkGiao">✓ Giao xong hết ${pend.length} đơn</button></div>`:'';
+  const nos={};dayOrders(day).slice().sort((a,b)=>a.t-b.t).forEach((o,i)=>nos[o.id]=i+1);
   L.innerHTML=bulk+os.map(o=>{
     const c=calc(o),b=bomCount(o.phone,o.id);
     const thuKhach=o.hang+(o.phiBy==='khach'?o.phi:0);
-    return `<article class="order" data-id="${o.id}">
+    const tm=new Date(o.t);
+    return `<article class="order s-${o.status}" data-id="${o.id}">
+      <div class="o-head"><span class="o-no">Đơn ${nos[o.id]||''}</span><span style="display:flex;align-items:center;gap:8px"><span class="o-time num">${pad(tm.getHours())}:${pad(tm.getMinutes())}</span><span class="chip st-${o.status}">${ST[o.status]}</span></span></div>
       <div class="o-top">
         <div style="min-width:0">${(()=>{const sp=normPhone(sdtGui(o));return`<div class="o-line"><span class="lb">Nơi gửi:</span> <b>${esc(o.shop)}</b>${sp?`${o.shop?' · ':''}<span class="num">${fmtPhone(sp)}</span> <a class="callmini" href="tel:${sp}" aria-label="Gọi nơi gửi">${IC.call}Gọi nơi gửi</a>`:''}</div>`})()}<div class="o-line"><span class="lb">Người nhận:</span> ${[o.ten?'<b>'+esc(o.ten)+'</b>':'',esc(o.addr),o.phone?'<span class="num">'+fmtPhone(o.phone)+'</span>':''].filter(Boolean).join(' · ')}</div>${o.note?`<div class="o-addr">Ghi chú: ${esc(o.note)}</div>`:''}</div>
         <div class="o-money"><b class="num">${shortMoney(thuKhach)}</b><small>thu của khách</small></div>
       </div>
       <div class="chips">
-        <span class="chip st-${o.status}">${ST[o.status]}</span>
         <span class="chip plain num">${o.phi?`Ship ${shortMoney(o.phi)} · ${o.phiBy==='khach'?'khách trả':'nơi gửi trả'}`:'Chưa có phí ship'}</span>
         ${o.ung?`<span class="chip plain num">Đã ứng ${shortMoney(o.ung)}</span>`:''}
         ${b?`<span class="chip warn">Số này từng bom ${b} lần</span>`:(()=>{const ci=custInfo(o.phone,o.id);return ci&&ci.giao>=2?`<span class="chip st-giao">Khách quen ${ci.giao} lần</span>`:''})()}
